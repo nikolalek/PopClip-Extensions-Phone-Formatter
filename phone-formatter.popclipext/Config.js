@@ -85,61 +85,262 @@ try {
 
 // Country configs: lengths, ext ranges, code
 const CNTRY_CFG = Object.freeze({
-    RU: { lens: [10, 11], extLens: [2, 6], code: '+7' },
-    US: { lens: [10, 11], extLens: [2, 6], code: '+1' },
-    CA: { lens: [10, 11], extLens: [2, 6], code: '+1' },
-    DE: { lens: [10, 11, 12], extLens: [2, 5], code: '+49' },
-    GB: { lens: [10, 11], extLens: [2, 5], code: '+44' },
-    FR: { lens: [10], extLens: [2, 4], code: '+33' },
-    CN: { lens: [11], extLens: [2, 5], code: '+86' },
-    JP: { lens: [10, 11], extLens: [2, 4], code: '+81' },
-    IT: { lens: [9, 10, 11], extLens: [2, 4], code: '+39' },
-    ES: { lens: [9], extLens: [2, 4], code: '+34' },
-    NL: { lens: [9], extLens: [2, 4], code: '+31' },
-    SE: { lens: [7, 8, 9], extLens: [2, 4], code: '+46' },
-    NO: { lens: [8], extLens: [2, 4], code: '+47' },
-    DK: { lens: [8], extLens: [2, 4], code: '+45' },
-    AT: { lens: [10, 11], extLens: [2, 4], code: '+43' },
-    CH: { lens: [9], extLens: [2, 4], code: '+41' },
-    BE: { lens: [9], extLens: [2, 4], code: '+32' },
-    IE: { lens: [9], extLens: [2, 4], code: '+353' },
-    PT: { lens: [9], extLens: [2, 4], code: '+351' },
-    GR: { lens: [10], extLens: [2, 4], code: '+30' },
-    FI: { lens: [9], extLens: [2, 4], code: '+358' },
-    CZ: { lens: [9], extLens: [2, 4], code: '+420' },
-    HU: { lens: [9], extLens: [2, 4], code: '+36' },
-    PL: { lens: [9], extLens: [2, 4], code: '+48' },
-    RO: { lens: [9], extLens: [2, 4], code: '+40' },
-    BG: { lens: [8, 9], extLens: [2, 4], code: '+359' },
-    HR: { lens: [8, 9], extLens: [2, 4], code: '+385' },
-    SI: { lens: [8], extLens: [2, 4], code: '+386' },
-    SK: { lens: [9], extLens: [2, 4], code: '+421' },
-    LT: { lens: [8], extLens: [2, 4], code: '+370' },
-    LV: { lens: [8], extLens: [2, 4], code: '+371' },
-    EE: { lens: [7, 8], extLens: [2, 4], code: '+372' },
-    CY: { lens: [8], extLens: [2, 4], code: '+357' },
-    MT: { lens: [8], extLens: [2, 4], code: '+356' },
-    LU: { lens: [9], extLens: [2, 4], code: '+352' },
-    TR: { lens: [10], extLens: [2, 4], code: '+90' },
-    AU: { lens: [9, 10], extLens: [2, 5], code: '+61' },
-    BR: { lens: [10, 11], extLens: [2, 5], code: '+55' },
-    MX: { lens: [10, 11], extLens: [2, 4], code: '+52' },
-    KR: { lens: [9, 10, 11], extLens: [2, 5], code: '+82' },
-    IN: { lens: [10], extLens: [2, 5], code: '+91' },
-    TH: { lens: [9, 10], extLens: [2, 4], code: '+66' }
+    RU: {
+        lens: [10, 11],
+        extLens: [2, 6],
+        code: '+7'
+    },
+    US: {
+        lens: [10, 11],
+        extLens: [2, 6],
+        code: '+1'
+    },
+    CA: {
+        lens: [10, 11],
+        extLens: [2, 6],
+        code: '+1'
+    },
+    DE: {
+        lens: [10, 11, 12],
+        extLens: [2, 5],
+        code: '+49'
+    },
+    GB: {
+        lens: [10, 11],
+        extLens: [2, 5],
+        code: '+44'
+    },
+    FR: {
+        lens: [10],
+        extLens: [2, 4],
+        code: '+33'
+    },
+    CN: {
+        lens: [11],
+        extLens: [2, 5],
+        code: '+86'
+    },
+    JP: {
+        lens: [10, 11],
+        extLens: [2, 4],
+        code: '+81'
+    },
+    IT: {
+        lens: [9, 10, 11],
+        extLens: [2, 4],
+        code: '+39'
+    },
+    ES: {
+        lens: [9],
+        extLens: [2, 4],
+        code: '+34'
+    },
+    NL: {
+        lens: [9],
+        extLens: [2, 4],
+        code: '+31'
+    },
+    SE: {
+        lens: [7, 8, 9],
+        extLens: [2, 4],
+        code: '+46'
+    },
+    NO: {
+        lens: [8],
+        extLens: [2, 4],
+        code: '+47'
+    },
+    DK: {
+        lens: [8],
+        extLens: [2, 4],
+        code: '+45'
+    },
+    AT: {
+        lens: [10, 11],
+        extLens: [2, 4],
+        code: '+43'
+    },
+    CH: {
+        lens: [9],
+        extLens: [2, 4],
+        code: '+41'
+    },
+    BE: {
+        lens: [9],
+        extLens: [2, 4],
+        code: '+32'
+    },
+    IE: {
+        lens: [9],
+        extLens: [2, 4],
+        code: '+353'
+    },
+    PT: {
+        lens: [9],
+        extLens: [2, 4],
+        code: '+351'
+    },
+    GR: {
+        lens: [10],
+        extLens: [2, 4],
+        code: '+30'
+    },
+    FI: {
+        lens: [9],
+        extLens: [2, 4],
+        code: '+358'
+    },
+    CZ: {
+        lens: [9],
+        extLens: [2, 4],
+        code: '+420'
+    },
+    HU: {
+        lens: [9],
+        extLens: [2, 4],
+        code: '+36'
+    },
+    PL: {
+        lens: [9],
+        extLens: [2, 4],
+        code: '+48'
+    },
+    RO: {
+        lens: [9],
+        extLens: [2, 4],
+        code: '+40'
+    },
+    BG: {
+        lens: [8, 9],
+        extLens: [2, 4],
+        code: '+359'
+    },
+    HR: {
+        lens: [8, 9],
+        extLens: [2, 4],
+        code: '+385'
+    },
+    SI: {
+        lens: [8],
+        extLens: [2, 4],
+        code: '+386'
+    },
+    SK: {
+        lens: [9],
+        extLens: [2, 4],
+        code: '+421'
+    },
+    LT: {
+        lens: [8],
+        extLens: [2, 4],
+        code: '+370'
+    },
+    LV: {
+        lens: [8],
+        extLens: [2, 4],
+        code: '+371'
+    },
+    EE: {
+        lens: [7, 8],
+        extLens: [2, 4],
+        code: '+372'
+    },
+    CY: {
+        lens: [8],
+        extLens: [2, 4],
+        code: '+357'
+    },
+    MT: {
+        lens: [8],
+        extLens: [2, 4],
+        code: '+356'
+    },
+    LU: {
+        lens: [9],
+        extLens: [2, 4],
+        code: '+352'
+    },
+    TR: {
+        lens: [10],
+        extLens: [2, 4],
+        code: '+90'
+    },
+    AU: {
+        lens: [9, 10],
+        extLens: [2, 5],
+        code: '+61'
+    },
+    BR: {
+        lens: [10, 11],
+        extLens: [2, 5],
+        code: '+55'
+    },
+    MX: {
+        lens: [10, 11],
+        extLens: [2, 4],
+        code: '+52'
+    },
+    KR: {
+        lens: [9, 10, 11],
+        extLens: [2, 5],
+        code: '+82'
+    },
+    IN: {
+        lens: [10],
+        extLens: [2, 5],
+        code: '+91'
+    },
+    TH: {
+        lens: [9, 10],
+        extLens: [2, 4],
+        code: '+66'
+    }
 });
 
 // Localized ext labels
 const EXT_LBLS = Object.freeze({
-    RU: 'доб.', US: 'ext.', CA: 'ext.', GB: 'ext.', DE: 'Durchwahl', FR: 'poste',
-    CN: '分机', JP: '内線', IT: 'int.', ES: 'ext.', NL: 'tst.',
-    SE: 'anknr', NO: 'lnr', DK: 'lok.', AT: 'DW', CH: 'App.',
-    BE: 'ext.', IE: 'ext.', PT: 'ext.', GR: 'εσωτ.', FI: 'alanumero',
-    CZ: 'linka', HU: 'mellék', PL: 'wew.', RO: 'int.', BG: 'вт.',
-    HR: 'lok.', SI: 'int.', SK: 'linka', LT: 'vidinis', LV: 'iekš.',
-    EE: 'lisa', CY: 'εσωτ.', MT: 'est.', LU: 'poste', TR: 'dahili',
-    AU: 'ext.', BR: 'ramal', MX: 'ext.', KR: '내선',
-    IN: 'ext.', TH: 'ต่อ'
+    RU: 'доб.',
+    US: 'ext.',
+    CA: 'ext.',
+    GB: 'ext.',
+    DE: 'Durchwahl',
+    FR: 'poste',
+    CN: '分机',
+    JP: '内線',
+    IT: 'int.',
+    ES: 'ext.',
+    NL: 'tst.',
+    SE: 'anknr',
+    NO: 'lnr',
+    DK: 'lok.',
+    AT: 'DW',
+    CH: 'App.',
+    BE: 'ext.',
+    IE: 'ext.',
+    PT: 'ext.',
+    GR: 'εσωτ.',
+    FI: 'alanumero',
+    CZ: 'linka',
+    HU: 'mellék',
+    PL: 'wew.',
+    RO: 'int.',
+    BG: 'вт.',
+    HR: 'lok.',
+    SI: 'int.',
+    SK: 'linka',
+    LT: 'vidinis',
+    LV: 'iekš.',
+    EE: 'lisa',
+    CY: 'εσωτ.',
+    MT: 'est.',
+    LU: 'poste',
+    TR: 'dahili',
+    AU: 'ext.',
+    BR: 'ramal',
+    MX: 'ext.',
+    KR: '내선',
+    IN: 'ext.',
+    TH: 'ต่อ'
 });
 
 // Ext patterns (regex for detection)
@@ -171,10 +372,16 @@ class PhoneFmt {
             if (m) {
                 let main = m[1].trim();
                 if (main.startsWith('tel:')) main = main.slice(4);
-                return { main, ext: m[2] };
+                return {
+                    main,
+                    ext: m[2]
+                };
             }
         }
-        return this.splitDigs(txt) || { main: txt, ext: null };
+        return this.splitDigs(txt) || {
+            main: txt,
+            ext: null
+        };
     }
 
     splitDigs(txt) {
@@ -188,7 +395,10 @@ class PhoneFmt {
                 const mainDigs = digs.slice(0, mainLen);
                 const extDigs = digs.slice(mainLen);
                 if (this.validMain(mainDigs) && this.validExt(extDigs)) {
-                    return { main: this.presMainFmt(txt, mainLen), ext: extDigs };
+                    return {
+                        main: this.presMainFmt(txt, mainLen),
+                        ext: extDigs
+                    };
                 }
             }
         }
@@ -220,8 +430,8 @@ class PhoneFmt {
     validExt(ext) {
         const digs = ext.replace(/[^\d]/g, '');
         return digs.length >= this.cfg.extLens[0] &&
-               digs.length <= this.cfg.extLens[1] &&
-               /^\d+$/.test(digs);
+            digs.length <= this.cfg.extLens[1] &&
+            /^\d+$/.test(digs);
     }
 
     normE164(num) {
@@ -236,7 +446,9 @@ class PhoneFmt {
     }
 
     manNorm(cln) {
-        const { code } = this.cfg;
+        const {
+            code
+        } = this.cfg;
         if (cln.startsWith(code)) return cln;
         if (cln.startsWith('+')) return cln;
         const rules = {
@@ -258,7 +470,9 @@ class PhoneFmt {
     }
 
     manIntlFmt(e164) {
-        const { code } = this.cfg;
+        const {
+            code
+        } = this.cfg;
         if (!e164.startsWith(code)) return e164;
         const nat = e164.slice(code.length);
         const fmts = {
@@ -275,33 +489,46 @@ class PhoneFmt {
     fmtExt(ext, typ) {
         if (!ext) return '';
         switch (typ) {
-            case 'contacts': return `,${ext}`;
-            case 'documents': return ` ${this.extLbl} ${ext}`;
-            case 'web': return `;ext=${ext}`;
-            default: return `,${ext}`;
+            case 'contacts':
+                return `,${ext}`;
+            case 'documents':
+                return ` ${this.extLbl} ${ext}`;
+            case 'web':
+                return `;ext=${ext}`;
+            default:
+                return `,${ext}`;
         }
     }
 
     fmtPhone(inp, typ) {
         if (!inp?.trim()) return null;
-        const { main, ext } = this.parseNum(inp);
+        const {
+            main,
+            ext
+        } = this.parseNum(inp);
         if (!main) return null;
         const e164 = this.normE164(main);
         if (!e164 || e164.length < 8) return null;
         let fmt;
         switch (typ) {
-            case 'contacts': fmt = e164; break;
-            case 'documents': fmt = this.fmtDocs(e164); break;
-            case 'web': fmt = `tel:${e164}`; break;
-            default: fmt = e164;
+            case 'contacts':
+                fmt = e164;
+                break;
+            case 'documents':
+                fmt = this.fmtDocs(e164);
+                break;
+            case 'web':
+                fmt = `tel:${e164}`;
+                break;
+            default:
+                fmt = e164;
         }
         return fmt ? fmt + this.fmtExt(ext, typ) : null;
     }
 }
 
 module.exports = {
-    actions: [
-        {
+    actions: [{
             title: {
                 ru: "📱 Контакты",
                 en: "📱 Contacts",
