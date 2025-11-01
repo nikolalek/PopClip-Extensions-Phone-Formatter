@@ -10,7 +10,7 @@ A PopClip extension for intelligent phone number formatting with extension suppo
 
 ## Screenshots
 ### PopClip panel in action
-The translation button appears when text is selected.
+The formatting button appears when you select a number.
 
 ![PopClip panel in action](screenshot.png)
 
