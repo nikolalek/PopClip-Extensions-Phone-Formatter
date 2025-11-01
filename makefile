@@ -1,10 +1,10 @@
 # Makefile для PopClip-расширения
 # Запуск: make release
-# Выходной файл: phone-formatter.popclipextz (именно .popclipextz)
+# Выходной файл: phone-formatter.popclipextz
 
 NAME     := phone-formatter
 EXT      := $(NAME).popclipext
-ZIP      := $(NAME).popclipextz        # ← именно .popclipextz
+ZIP      := $(NAME).popclipextz
 CONFIG   := $(EXT)/Config.js
 IDENT    := com.nikolalek.$(NAME)
 
