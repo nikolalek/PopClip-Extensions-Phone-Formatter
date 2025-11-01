@@ -8,6 +8,12 @@
 
 A PopClip extension for intelligent phone number formatting with extension support and localization in 15 languages.
 
+#### Screenshots
+##### PopClip panel in action
+The translation button appears when text is selected.
+
+![PopClip panel in action](screenshot.png)
+
 ## ✨ Features
 
 - **Three output formats**:
