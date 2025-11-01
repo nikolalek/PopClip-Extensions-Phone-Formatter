@@ -10,12 +10,10 @@ A PopClip extension for intelligent phone number formatting with extension suppo
 ---
 ## Screenshots
 ### PopClip Settings Panel in action
-
-Select a locale for formatting your phone number.
+Select a locale for formatting your phone number. 
 ![PopClip Settings Panel in action](screenshot1.png)
 ---
 ### PopClip panel in action
-
 The formatting button appears when you select a number.
 ![PopClip panel in action](screenshot.png)
 ---
