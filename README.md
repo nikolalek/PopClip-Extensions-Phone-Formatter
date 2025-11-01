@@ -1,11 +1,7 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/PopClip-Extension-blue?style=for-the-badge&logo=apple">
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge">
-  <img src="https://img.shields.io/badge/Languages-15-orange?style=for-the-badge">
-</p>
-
-<p align="center">
-  <a href="README.en.md"><img src="https://img.shields.io/badge/lang-English 🇬🇧-blue?style=for-the-badge"></a>
+  <a href="README.en.md"><img src="https://img.shields.io/badge/lang-Русский 🇷🇺-red?style=for-the-badge"></a>
+  <a href="https://www.popclip.app/extensions/"><img src="https://img.shields.io/badge/PopClip-Extension-blue?style=for-the-badge&logo=apple">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge"></a>
 </p>
 
 # 📱 PopClip Phone Formatter
