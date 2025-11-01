@@ -70,7 +70,7 @@ The formatting button appears when you select a number.
 
 ## 🛠 Technical Details
 
-- **Library**: libphonenumber-js for accurate parsing
+- **Library**: [libphonenumber-js](https://unpkg.com/libphonenumber-js/bundle/libphonenumber-js.min.js) for accurate parsing
 - **Fallback**: Custom parser when library unavailable
 - **Compatibility**: PopClip 4200+
 - **Localization**: 15 interface languages
