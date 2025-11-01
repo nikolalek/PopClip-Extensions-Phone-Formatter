@@ -23,7 +23,7 @@ A PopClip extension for intelligent phone number formatting with extension suppo
 ## 🚀 Installation
 
 1. Make sure you have [PopClip](https://pilotmoon.com/popclip/) installed
-2. Download `phone-formatter.popclipext` from [Releases](../../releases)
+2. Download `phone-formatter.popclipext` from [Releases](../../releases/latest)
 3. Double-click the file to install
 4. Configure default country in extension settings
 
