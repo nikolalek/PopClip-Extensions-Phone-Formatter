@@ -9,11 +9,11 @@
 A PopClip extension for intelligent phone number formatting with extension support and localization in 15 languages.
 ---
 ## Screenshots
-### PopClip Settings Panel in action
+### PopClip Settings Panel
 Select a locale for formatting your phone number. 
 ![PopClip Settings Panel in action](screenshot1.png)
 ---
-### PopClip panel in action
+### PopClip panel
 The formatting button appears when you select a number.
 ![PopClip panel in action](screenshot.png)
 ---
