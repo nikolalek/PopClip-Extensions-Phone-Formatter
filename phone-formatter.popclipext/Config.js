@@ -17,7 +17,7 @@
 //   sk: Formátovač Telefónu
 //   da: Telefon Formatter
 // author: nikolalek
-// identifier: com.nikolalek.phone-formatter
+// identifier: ru.nikolalek.extension.phone-formatter
 // description:
 //   ru: Форматирование телефонных номеров с добавочными в стандарты E.164, E.123, RFC 3966
 //   en: Format phone numbers with extensions to E.164, E.123, RFC 3966 standards
