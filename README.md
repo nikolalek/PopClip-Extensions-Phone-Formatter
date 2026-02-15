@@ -162,7 +162,7 @@ Input → Clean & Parse Extension → libphonenumber-js
 <details>
 <summary><strong>Dependencies</strong></summary>
 
-- **Runtime**: [libphonenumber-js](https://github.com/catamphetamine/libphonenumber-js) (bundled)
+- **Runtime**: [libphonenumber-js](https://unpkg.com/libphonenumber-js/bundle/libphonenumber-js.min.js) (bundled)
 - **Platform**: PopClip 4200+
 - **OS**: macOS 11+
 

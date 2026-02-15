@@ -162,7 +162,7 @@
 <details>
 <summary><strong>Зависимости</strong></summary>
 
-- **Runtime**: [libphonenumber-js](https://github.com/catamphetamine/libphonenumber-js) (встроена)
+- **Runtime**: [libphonenumber-js](https://unpkg.com/libphonenumber-js/bundle/libphonenumber-js.min.js) (встроена)
 - **Платформа**: PopClip 4200+
 - **ОС**: macOS 11+
 
