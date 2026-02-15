@@ -35,6 +35,7 @@ pids
 
 # Temporary folders
 tmp/
+tmp2/
 temp/
 
 # Build outputs
