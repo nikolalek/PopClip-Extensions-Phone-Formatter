@@ -1,7 +1,7 @@
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/lang-English-blue?style=flat-square"></a>
   <img src="https://img.shields.io/badge/PopClip-4200+-blue?style=flat-square&logo=apple">
-  <img src="https://img.shields.io/badge/version-2.5.0-green?style=flat-square">
+  <img src="https://img.shields.io/badge/version-2.5.1-green?style=flat-square">
   <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square">
 </p>
 
@@ -187,7 +187,7 @@
 
 ## История изменений
 
-### v2.5.0
+### v2.5.1
 - **Критическое исправление**: номера с `isValid()=false` теперь отклоняются (не fallback)
 - Исправлена обработка множественных плюсов (`++`, `+++` и т.д.)
 - Добавлен модификатор Option (⌥) для инверсии формата
