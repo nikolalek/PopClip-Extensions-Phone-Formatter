@@ -1,8 +1,8 @@
 <p align="center">
-  <a href="README.ru.md"><img src="https://img.shields.io/badge/lang-Русский-red?style=flat-square"></a>
-  <img src="https://img.shields.io/badge/PopClip-4200+-blue?style=flat-square&logo=apple">
-  <img src="https://img.shields.io/badge/version-2.5.1-green?style=flat-square">
-  <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square">
+  <a href="README.ru.md"><img src="https://img.shields.io/badge/lang-English-blue?style=flat-square"></a>
+  <a href="https://www.popclip.app/"><img src="https://img.shields.io/badge/PopClip-4200+-blue?style=flat-square&logo=apple"></a>
+  <a href="../../releases/latest"><img src="https://img.shields.io/badge/version-2.5.1-green?style=flat-square"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square"></a>
 </p>
 
 <h1 align="center">📱 PopClip Phone Formatter</h1>
@@ -41,7 +41,7 @@
 ## Installation
 
 1. Install [PopClip](https://pilotmoon.com/popclip/) (version 4200+)
-2. Download `phone-formatter.popclipext` from [Releases](https://github.com/nikolalek/popclip-phone-formatter/releases/latest)
+2. Download `phone-formatter.popclipext` from [Releases](../../releases/latest)
 3. Double-click to install
 4. Set your default country in extension settings
 
@@ -162,7 +162,7 @@ Input → Clean & Parse Extension → libphonenumber-js
 <details>
 <summary><strong>Dependencies</strong></summary>
 
-- **Runtime**: [libphonenumber-js](https://unpkg.com/libphonenumber-js/bundle/libphonenumber-js.min.js) (bundled)
+- **Runtime**: [libphonenumber-js.min.js](https://unpkg.com/libphonenumber-js/bundle/libphonenumber-js.min.js) (bundled)
 - **Platform**: PopClip 4200+
 - **OS**: macOS 11+
 
@@ -178,7 +178,7 @@ Input → Clean & Parse Extension → libphonenumber-js
 
 ## Reporting Issues
 
-Found a bug? Please [open an issue](https://github.com/nikolalek/popclip-phone-formatter/issues) with:
+Found a bug? Please [open an issue](../../issues) with:
 
 - Input phone number
 - Expected output
