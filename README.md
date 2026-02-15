@@ -1,7 +1,7 @@
 <p align="center">
   <a href="README.ru.md"><img src="https://img.shields.io/badge/lang-Русский-red?style=flat-square"></a>
   <img src="https://img.shields.io/badge/PopClip-4200+-blue?style=flat-square&logo=apple">
-  <img src="https://img.shields.io/badge/version-2.5.0-green?style=flat-square">
+  <img src="https://img.shields.io/badge/version-2.5.1-green?style=flat-square">
   <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square">
 </p>
 
@@ -187,7 +187,7 @@ Found a bug? Please [open an issue](https://github.com/nikolalek/popclip-phone-f
 
 ## Changelog
 
-### v2.5.0
+### v2.5.1
 - **Critical fix**: Numbers with `isValid()=false` now rejected (not fallback)
 - Fixed handling of multiple plus signs (`++`, `+++`, etc.)
 - Added Option (⌥) modifier for format inversion
