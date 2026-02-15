@@ -41,7 +41,7 @@
 ## Установка
 
 1. Установите [PopClip](https://pilotmoon.com/popclip/) (версия 4200+)
-2. Скачайте `phone-formatter.popclipext` из [Releases](https://github.com/nikolalek/popclip-phone-formatter/releases/latest)
+2. Скачайте `phone-formatter.popclipext` из [Releases](../../releases/latest)
 3. Дважды кликните для установки
 4. Выберите страну по умолчанию в настройках расширения
 
@@ -162,7 +162,7 @@
 <details>
 <summary><strong>Зависимости</strong></summary>
 
-- **Runtime**: [libphonenumber-js](https://unpkg.com/libphonenumber-js/bundle/libphonenumber-js.min.js) (встроена)
+- **Runtime**: [libphonenumber-js.min.js](https://unpkg.com/libphonenumber-js/bundle/libphonenumber-js.min.js) (встроена)
 - **Платформа**: PopClip 4200+
 - **ОС**: macOS 11+
 
@@ -178,7 +178,7 @@
 
 ## Сообщение об ошибках
 
-Нашли ошибку? Пожалуйста, [создайте issue](https://github.com/nikolalek/popclip-phone-formatter/issues) с указанием:
+Нашли ошибку? Пожалуйста, [создайте issue](../../issues) с указанием:
 
 - Входящий номер телефона
 - Ожидаемый результат
