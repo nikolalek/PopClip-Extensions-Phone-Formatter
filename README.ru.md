@@ -1,8 +1,8 @@
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/lang-English-blue?style=flat-square"></a>
-  <img src="https://img.shields.io/badge/PopClip-4200+-blue?style=flat-square&logo=apple">
-  <img src="https://img.shields.io/badge/version-2.5.1-green?style=flat-square">
-  <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square">
+  <a href="https://www.popclip.app/"><img src="https://img.shields.io/badge/PopClip-4200+-blue?style=flat-square&logo=apple"></a>
+  <a href="https://github.com/nikolalek/popclip-phone-formatter/releases/latest"<img src="https://img.shields.io/badge/version-2.5.1-green?style=flat-square"></a>
+  <a href="LICENSE"<img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square"></a>
 </p>
 
 <h1 align="center">📱 PopClip Phone Formatter</h1>
