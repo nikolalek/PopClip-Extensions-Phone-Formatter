@@ -88,687 +88,479 @@
 "use strict";
 
 /**
- * PopClip Phone Formatter
+ * PopClip Phone Formatter v2.5.0
  * 
  * Formats phone numbers to international standards:
  * - E.164: +79123456789 (machine-readable format)
  * - E.123: +7 912 345 67 89 (human-readable international)
  * - RFC 3966: tel:+79123456789;ext=123 (URI format)
  * 
- * Primary parser: libphonenumber-js (Google's metadata)
- * Fallback: Manual parsing for 45+ countries
+ * Modifier keys:
+ * - Option (⌥): Inverts document format (intl ↔ natl)
  * 
- * @version 2.0.0
+ * Architecture:
+ * - libphonenumber-js is the PRIMARY authority
+ * - We only clean/preprocess input for libphonenumber
+ * - If libphonenumber parses but isValid=false → REJECT (not fallback)
+ * - If libphonenumber throws exception → manual fallback for local formats
+ * - All formatting follows libphonenumber rules
+ * 
  * @author nikolalek
  * @license MIT
- * @see Inspiration: https://forum.popclip.app/t/format-phone-numbers/1536
+ * @see https://github.com/nikolalek/PopClip-Extensions-Phone-Formatter
  */
 
-// Load libphonenumber-js (primary parser)
+// =============================================================================
+// DEPENDENCIES
+// =============================================================================
+
 let libPhone = null;
 try {
     libPhone = require("libphonenumber-js.min.js");
     if (!libPhone?.parsePhoneNumber) libPhone = null;
-} catch (e) {
-    console.error("libphonenumber-js unavailable, using fallback parser");
-}
+} catch {}
 
-// Country metadata: [national lengths, extension lengths, intl code]
-const COUNTRY = Object.freeze({
-    RU: {
-        lens: [10, 11],
-        extLens: [2, 6],
-        code: '+7'
-    },
-    US: {
-        lens: [10, 11],
-        extLens: [2, 6],
-        code: '+1'
-    },
-    CA: {
-        lens: [10, 11],
-        extLens: [2, 6],
-        code: '+1'
-    },
-    DE: {
-        lens: [10, 11, 12],
-        extLens: [2, 5],
-        code: '+49'
-    },
-    GB: {
-        lens: [10, 11],
-        extLens: [2, 5],
-        code: '+44'
-    },
-    FR: {
-        lens: [10],
-        extLens: [2, 4],
-        code: '+33'
-    },
-    CN: {
-        lens: [11],
-        extLens: [2, 5],
-        code: '+86'
-    },
-    JP: {
-        lens: [10, 11],
-        extLens: [2, 4],
-        code: '+81'
-    },
-    IT: {
-        lens: [9, 10, 11],
-        extLens: [2, 4],
-        code: '+39'
-    },
-    ES: {
-        lens: [9],
-        extLens: [2, 4],
-        code: '+34'
-    },
-    NL: {
-        lens: [9],
-        extLens: [2, 4],
-        code: '+31'
-    },
-    SE: {
-        lens: [7, 8, 9],
-        extLens: [2, 4],
-        code: '+46'
-    },
-    NO: {
-        lens: [8],
-        extLens: [2, 4],
-        code: '+47'
-    },
-    DK: {
-        lens: [8],
-        extLens: [2, 4],
-        code: '+45'
-    },
-    AT: {
-        lens: [10, 11],
-        extLens: [2, 4],
-        code: '+43'
-    },
-    CH: {
-        lens: [9],
-        extLens: [2, 4],
-        code: '+41'
-    },
-    BE: {
-        lens: [9],
-        extLens: [2, 4],
-        code: '+32'
-    },
-    IE: {
-        lens: [9],
-        extLens: [2, 4],
-        code: '+353'
-    },
-    PT: {
-        lens: [9],
-        extLens: [2, 4],
-        code: '+351'
-    },
-    GR: {
-        lens: [10],
-        extLens: [2, 4],
-        code: '+30'
-    },
-    FI: {
-        lens: [9],
-        extLens: [2, 4],
-        code: '+358'
-    },
-    CZ: {
-        lens: [9],
-        extLens: [2, 4],
-        code: '+420'
-    },
-    HU: {
-        lens: [9],
-        extLens: [2, 4],
-        code: '+36'
-    },
-    PL: {
-        lens: [9],
-        extLens: [2, 4],
-        code: '+48'
-    },
-    RO: {
-        lens: [9],
-        extLens: [2, 4],
-        code: '+40'
-    },
-    BG: {
-        lens: [8, 9],
-        extLens: [2, 4],
-        code: '+359'
-    },
-    HR: {
-        lens: [8, 9],
-        extLens: [2, 4],
-        code: '+385'
-    },
-    SI: {
-        lens: [8],
-        extLens: [2, 4],
-        code: '+386'
-    },
-    SK: {
-        lens: [9],
-        extLens: [2, 4],
-        code: '+421'
-    },
-    LT: {
-        lens: [8],
-        extLens: [2, 4],
-        code: '+370'
-    },
-    LV: {
-        lens: [8],
-        extLens: [2, 4],
-        code: '+371'
-    },
-    EE: {
-        lens: [7, 8],
-        extLens: [2, 4],
-        code: '+372'
-    },
-    CY: {
-        lens: [8],
-        extLens: [2, 4],
-        code: '+357'
-    },
-    MT: {
-        lens: [8],
-        extLens: [2, 4],
-        code: '+356'
-    },
-    LU: {
-        lens: [9],
-        extLens: [2, 4],
-        code: '+352'
-    },
-    TR: {
-        lens: [10],
-        extLens: [2, 4],
-        code: '+90'
-    },
-    AU: {
-        lens: [9, 10],
-        extLens: [2, 5],
-        code: '+61'
-    },
-    BR: {
-        lens: [10, 11],
-        extLens: [2, 5],
-        code: '+55'
-    },
-    MX: {
-        lens: [10, 11],
-        extLens: [2, 4],
-        code: '+52'
-    },
-    KR: {
-        lens: [9, 10, 11],
-        extLens: [2, 5],
-        code: '+82'
-    },
-    IN: {
-        lens: [10],
-        extLens: [2, 5],
-        code: '+91'
-    },
-    TH: {
-        lens: [9, 10],
-        extLens: [2, 4],
-        code: '+66'
-    }
-});
+// =============================================================================
+// CONSTANTS
+// =============================================================================
 
-// Localized extension labels (E.123 standard)
-const EXT_LABEL = Object.freeze({
-    RU: 'доб.',
-    US: 'ext.',
-    CA: 'ext.',
-    GB: 'ext.',
-    DE: 'Durchwahl',
-    FR: 'poste',
-    CN: '分机',
-    JP: '内線',
-    IT: 'int.',
-    ES: 'ext.',
-    NL: 'tst.',
-    SE: 'anknr',
-    NO: 'lnr',
-    DK: 'lok.',
-    AT: 'DW',
-    CH: 'App.',
-    BE: 'ext.',
-    IE: 'ext.',
-    PT: 'ext.',
-    GR: 'εσωτ.',
-    FI: 'alanumero',
-    CZ: 'linka',
-    HU: 'mellék',
-    PL: 'wew.',
-    RO: 'int.',
-    BG: 'вт.',
-    HR: 'lok.',
-    SI: 'int.',
-    SK: 'linka',
-    LT: 'vidinis',
-    LV: 'iekš.',
-    EE: 'lisa',
-    CY: 'εσωτ.',
-    MT: 'est.',
-    LU: 'poste',
-    TR: 'dahili',
-    AU: 'ext.',
-    BR: 'ramal',
-    MX: 'ext.',
-    KR: '내선',
-    IN: 'ext.',
-    TH: 'ต่อ'
-});
+const VALID_CODES = new Set([
+    '+1', '+7', '+20', '+27', '+30', '+31', '+32', '+33', '+34', '+36',
+    '+39', '+40', '+41', '+43', '+44', '+45', '+46', '+47', '+48', '+49',
+    '+51', '+52', '+53', '+54', '+55', '+56', '+57', '+58', '+60', '+61',
+    '+62', '+63', '+64', '+65', '+66', '+81', '+82', '+84', '+86', '+90',
+    '+91', '+92', '+93', '+94', '+95', '+98', '+212', '+213', '+216', '+218',
+    '+220', '+221', '+222', '+223', '+224', '+225', '+226', '+227', '+228', '+229',
+    '+230', '+231', '+232', '+233', '+234', '+235', '+236', '+237', '+238', '+239',
+    '+240', '+241', '+242', '+243', '+244', '+245', '+246', '+248', '+249', '+250',
+    '+251', '+252', '+253', '+254', '+255', '+256', '+257', '+258', '+260', '+261',
+    '+262', '+263', '+264', '+265', '+266', '+267', '+268', '+269', '+290', '+291',
+    '+297', '+298', '+299', '+350', '+351', '+352', '+353', '+354', '+355', '+356',
+    '+357', '+358', '+359', '+370', '+371', '+372', '+373', '+374', '+375', '+376',
+    '+377', '+378', '+380', '+381', '+382', '+383', '+385', '+386', '+387', '+389',
+    '+420', '+421', '+423', '+500', '+501', '+502', '+503', '+504', '+505', '+506',
+    '+507', '+508', '+509', '+590', '+591', '+592', '+593', '+594', '+595', '+596',
+    '+597', '+598', '+599', '+670', '+672', '+673', '+674', '+675', '+676', '+677',
+    '+678', '+679', '+680', '+681', '+682', '+683', '+684', '+685', '+686', '+687',
+    '+688', '+689', '+690', '+691', '+692', '+850', '+852', '+853', '+855', '+856',
+    '+880', '+886', '+960', '+961', '+962', '+963', '+964', '+965', '+966', '+967',
+    '+968', '+970', '+971', '+972', '+973', '+974', '+975', '+976', '+977', '+992',
+    '+993', '+994', '+995', '+996', '+998'
+]);
 
-// Extension detection patterns (RFC 3966, E.123, common formats)
-const EXT_PATTERNS = Object.freeze([
+const COUNTRY = {
+    RU: { lens: [10], extLen: [2, 6], code: '+7', maxNational: 10 },
+    US: { lens: [10], extLen: [2, 6], code: '+1', maxNational: 10 },
+    CA: { lens: [10], extLen: [2, 6], code: '+1', maxNational: 10 },
+    DE: { lens: [10, 11], extLen: [2, 5], code: '+49', maxNational: 11 },
+    GB: { lens: [10, 11], extLen: [2, 5], code: '+44', maxNational: 10 },
+    FR: { lens: [9], extLen: [2, 4], code: '+33', maxNational: 9 },
+    CN: { lens: [11], extLen: [2, 5], code: '+86', maxNational: 11 },
+    JP: { lens: [10, 11], extLen: [2, 4], code: '+81', maxNational: 10 },
+    IT: { lens: [9, 10, 11], extLen: [2, 4], code: '+39', maxNational: 10 },
+    ES: { lens: [9], extLen: [2, 4], code: '+34', maxNational: 9 },
+    NL: { lens: [9], extLen: [2, 4], code: '+31', maxNational: 9 },
+    SE: { lens: [7, 8, 9], extLen: [2, 4], code: '+46', maxNational: 9 },
+    NO: { lens: [8], extLen: [2, 4], code: '+47', maxNational: 8 },
+    DK: { lens: [8], extLen: [2, 4], code: '+45', maxNational: 8 },
+    AT: { lens: [10, 11], extLen: [2, 4], code: '+43', maxNational: 11 },
+    CH: { lens: [9], extLen: [2, 4], code: '+41', maxNational: 9 },
+    BE: { lens: [9], extLen: [2, 4], code: '+32', maxNational: 9 },
+    IE: { lens: [9], extLen: [2, 4], code: '+353', maxNational: 9 },
+    PT: { lens: [9], extLen: [2, 4], code: '+351', maxNational: 9 },
+    GR: { lens: [10], extLen: [2, 4], code: '+30', maxNational: 10 },
+    FI: { lens: [9], extLen: [2, 4], code: '+358', maxMaximum: 9 },
+    CZ: { lens: [9], extLen: [2, 4], code: '+420', maxNational: 9 },
+    HU: { lens: [9], extLen: [2, 4], code: '+36', maxNational: 9 },
+    PL: { lens: [9], extLen: [2, 4], code: '+48', maxNational: 9 },
+    RO: { lens: [9], extLen: [2, 4], code: '+40', maxNational: 9 },
+    BG: { lens: [8, 9], extLen: [2, 4], code: '+359', maxNational: 9 },
+    HR: { lens: [8, 9], extLen: [2, 4], code: '+385', maxNational: 9 },
+    SI: { lens: [8], extLen: [2, 4], code: '+386', maxNational: 8 },
+    SK: { lens: [9], extLen: [2, 4], code: '+421', maxNational: 9 },
+    LT: { lens: [8], extLen: [2, 4], code: '+370', maxNational: 8 },
+    LV: { lens: [8], extLen: [2, 4], code: '+371', maxNational: 8 },
+    EE: { lens: [7, 8], extLen: [2, 4], code: '+372', maxNational: 8 },
+    CY: { lens: [8], extLen: [2, 4], code: '+357', maxNational: 8 },
+    MT: { lens: [8], extLen: [2, 4], code: '+356', maxNational: 8 },
+    LU: { lens: [9], extLen: [2, 4], code: '+352', maxNational: 9 },
+    TR: { lens: [10], extLen: [2, 4], code: '+90', maxNational: 10 },
+    AU: { lens: [9], extLen: [2, 5], code: '+61', maxNational: 9 },
+    BR: { lens: [10, 11], extLen: [2, 5], code: '+55', maxNational: 11 },
+    MX: { lens: [10, 11], extLen: [2, 4], code: '+52', maxNational: 11 },
+    KR: { lens: [9, 10], extLen: [2, 5], code: '+82', maxNational: 10 },
+    IN: { lens: [10], extLen: [2, 5], code: '+91', maxNational: 10 },
+    TH: { lens: [9], extLen: [2, 4], code: '+66', maxNational: 9 },
+    AD: { lens: [6, 8], extLen: [2, 4], code: '+376', maxNational: 8 },
+    VN: { lens: [9, 10], extLen: [2, 4], code: '+84', maxNational: 10 }
+};
+
+const EXT_LABEL = {
+    RU: 'доб.', US: 'ext.', CA: 'ext.', GB: 'ext.',
+    DE: 'Durchwahl', FR: 'poste', CN: '分机', JP: '内線',
+    IT: 'int.', ES: 'ext.', NL: 'tst.', SE: 'anknr',
+    NO: 'lnr', DK: 'lok.', AT: 'DW', CH: 'App.',
+    BE: 'ext.', IE: 'ext.', PT: 'ext.', GR: 'εσωτ.',
+    FI: 'alanumero', CZ: 'linka', HU: 'mellék', PL: 'wew.',
+    RO: 'int.', BG: 'вт.', HR: 'lok.', SI: 'int.',
+    SK: 'linka', LT: 'vidinis', LV: 'iekš.', EE: 'lisa',
+    CY: 'εσωτ.', MT: 'est.', LU: 'poste', TR: 'dahili',
+    AU: 'ext.', BR: 'ramal', MX: 'ext.', KR: '내선',
+    IN: 'ext.', TH: 'ต่อ', AD: 'ext.', VN: 'ext.'
+};
+
+const EXT_PATTERNS = [
     /^tel:([+\d\-\(\)\s]+);ext(?:ension)?=(\d+)$/i,
     /(.+)[,;]\s*(\d+)$/,
     /(.+)\s+(?:доб\.?|ext\.?|extension|добавочный|durchwahl|poste|分机|内線|int\.?|tst\.?|anknr|lnr|lok\.?|DW|App\.?|εσωτ\.?|alanumero|linka|mellék|wew\.?|вт\.?|vidinis|iekš\.?|lisa|est\.?|dahili|ramal|내선|ต่อ)\s*(\d+)$/i,
     /(.+)\s*[x#*]\s*(\d+)$/i
-]);
+];
+
+const PHONE_REGEX = /(?:\+?\d[\d\s\-\(\)]{6,}\d)|\d{7,}/;
+const MIN_PHONE_DIGITS = 7;
+const MAX_E164_LENGTH = 15;
+const DEFAULT_COUNTRY = 'RU';
+
+// =============================================================================
+// PHONE FORMATTER CLASS
+// =============================================================================
 
 class PhoneFormatter {
-    constructor(country = 'RU', docFormat = 'intl') {
-        this.country = country;
-        this.cfg = COUNTRY[country] || COUNTRY.RU;
-        this.extLabel = EXT_LABEL[country] || EXT_LABEL.US;
-        this.lib = libPhone;
-        this.docFormat = docFormat; // 'intl' or 'natl'
+    #country;
+    #cfg;
+    #extLabel;
+    #docFormat;
+
+    constructor(country, docFormat) {
+        this.#country = String(country || DEFAULT_COUNTRY).toUpperCase();
+        this.#cfg = COUNTRY[this.#country] || COUNTRY[DEFAULT_COUNTRY];
+        this.#extLabel = EXT_LABEL[this.#country] || 'ext.';
+        this.#docFormat = docFormat === 'natl' ? 'natl' : 'intl';
     }
 
     /**
-     * Clean input: remove note blocks, normalize whitespace
+     * Main entry point - format phone number
+     * @param {string} input - Raw phone number input
+     * @param {string} type - Output format: 'contact', 'document', 'web'
+     * @returns {string|null} Formatted number or null if invalid
      */
-    clean(input) {
-        return input
+    format(input, type) {
+        // Step 1: Validate input
+        const trimmed = this.#validateInput(input);
+        if (!trimmed) return null;
+
+        // Step 2: Parse extension from input
+        const { main, ext } = this.#parse(trimmed);
+        if (!main) return null;
+
+        // Step 3: Normalize to E.164 (libphonenumber priority!)
+        const e164 = this.#toE164(main);
+        if (!e164) return null;
+
+        // Step 4: Format by type
+        const formatted = this.#formatByType(e164, type);
+        if (!formatted) return null;
+
+        // Step 5: Add extension if present
+        return formatted + this.#formatExtension(ext, type);
+    }
+
+    #validateInput(input) {
+        if (!input || typeof input !== 'string') return null;
+        const trimmed = input.trim();
+        if (!trimmed) return null;
+        const digitCount = (trimmed.match(/\d/g) || []).length;
+        if (digitCount < MIN_PHONE_DIGITS) return null;
+        return trimmed;
+    }
+
+    /**
+     * Parse extension from phone number
+     * Supports: comma, semicolon, ext., x, #, *, textual labels
+     */
+    #parse(input) {
+        // Remove empty brackets and normalize whitespace
+        const txt = input
             .replace(/\s*[\(\[\{][^0-9+\)\]\}]*[\)\]\}]\s*/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
-    }
 
-    /**
-     * Parse number into main and extension parts
-     * @returns {{main: string, ext: string|null}}
-     */
-    parse(input) {
-        const txt = this.clean(input);
-
-        // Try pattern matching first
+        // Try each extension pattern
         for (const pattern of EXT_PATTERNS) {
             const match = txt.match(pattern);
             if (match) {
                 let main = match[1].trim();
-                if (main.startsWith('tel:')) main = main.slice(4);
-                return {
-                    main,
-                    ext: match[2]
-                };
+                if (main.toLowerCase().startsWith('tel:')) {
+                    main = main.slice(4);
+                }
+                return { main, ext: match[2] };
             }
         }
 
-        // Try digit-based splitting
-        return this.splitByDigits(txt) || {
-            main: txt,
-            ext: null
-        };
+        return { main: txt, ext: null };
     }
 
     /**
-     * Split by digit count (heuristic for numbers without separators)
+     * Convert to E.164 format - libphonenumber is PRIORITY!
+     * 
+     * Logic:
+     * 1. Clean input (remove garbage, fix multiple plus signs)
+     * 2. Try libphonenumber parsing with isValid() check
+     * 3. If libphonenumber parsed but isValid=false → REJECT (don't use manual)
+     * 4. If libphonenumber threw exception → manual fallback
      */
-    splitByDigits(txt) {
-        const digits = txt.replace(/[^\d]/g, '');
-        if (digits.length < 7) return null;
-
-        for (const mainLen of this.cfg.lens) {
-            if (digits.length <= mainLen) continue;
-
-            const minTotal = mainLen + this.cfg.extLens[0];
-            const maxTotal = mainLen + this.cfg.extLens[1];
-
-            if (digits.length >= minTotal && digits.length <= maxTotal) {
-                const mainDigits = digits.slice(0, mainLen);
-                const extDigits = digits.slice(mainLen);
-
-                if (this.isValidMain(mainDigits) && this.isValidExt(extDigits)) {
-                    return {
-                        main: this.preserveFormat(txt, mainLen),
-                        ext: extDigits
-                    };
+    #toE164(num) {
+        // Step 1: Clean input
+        let clean = num.replace(/[^\d+]/g, '');
+        
+        // Step 2: Fix multiple plus signs (++, +++, etc.)
+        clean = clean.replace(/^[+]+/, '+');
+        
+        // Step 3: libphonenumber is the authority - try it FIRST
+        if (libPhone) {
+            try {
+                // For numbers with +, don't pass country (let lib figure it out)
+                // For numbers without +, use configured country
+                const parseCountry = clean.startsWith('+') ? undefined : this.#country;
+                const parsed = libPhone.parsePhoneNumber(clean, parseCountry);
+                
+                // CRITICAL: If parsed exists, libphonenumber recognized the format
+                // - isValid() = true → accept and return
+                // - isValid() = false → REJECT (don't fall through to manual)
+                if (parsed) {
+                    if (parsed.isValid()) {
+                        return parsed.format('E.164');
+                    }
+                    // parsed but invalid → reject entirely
+                    // Don't fall through to manual - libphonenumber said it's invalid
+                    return null;
                 }
+            } catch {
+                // Exception means libphonenumber couldn't parse at all
+                // Fall through to manual normalization for local formats
             }
+        }
+        
+        // Step 4: Manual fallback (only if libphonenumber unavailable or threw exception)
+        return this.#manualNormalize(clean);
+    }
+
+    /**
+     * Manual normalization fallback
+     * Only used when libphonenumber is unavailable or couldn't parse
+     */
+    #manualNormalize(clean) {
+        if (!clean) return null;
+        const { code } = this.#cfg;
+        
+        // Already starts with correct country code
+        if (clean.startsWith(code)) return clean;
+        
+        // Has some + prefix - validate the country code
+        if (clean.startsWith('+')) {
+            const extractedCode = this.#extractCountryCode(clean);
+            return extractedCode ? clean : null;
+        }
+        
+        // Country-specific normalization
+        if (this.#country === 'RU') return this.#normalizeRU(clean);
+        if (['US', 'CA'].includes(this.#country)) return this.#normalizeNANP(clean);
+        return this.#normalizeDefault(clean, code);
+    }
+
+    #extractCountryCode(e164) {
+        for (let len = 3; len >= 1; len--) {
+            const code = '+' + e164.slice(1, len + 1);
+            if (VALID_CODES.has(code)) return code;
         }
         return null;
     }
 
-    /**
-     * Extract first N digits while preserving original formatting
-     */
-    preserveFormat(txt, targetDigitCount) {
-        let digitCount = 0;
-        let result = '';
+    #normalizeRU(n) {
+        n = n.replace(/^0+/, '');
+        if (n.length === 10) return '+7' + n;
+        if (n.length === 11 && n.startsWith('8')) return '+7' + n.slice(1);
+        if (n.length === 11 && n.startsWith('7')) return '+' + n;
+        return null;
+    }
 
-        for (const ch of txt) {
-            if (/\d/.test(ch)) {
-                result += ch;
-                if (++digitCount >= targetDigitCount) break;
-            } else if (/[+\-\s\(\)]/.test(ch)) {
-                if (ch === '+' && result.length === 0) result += ch;
-                else if (ch !== '+' && result.length > 0) result += ch;
-            }
+    #normalizeNANP(n) {
+        n = n.replace(/^0+/, '');
+        if (n.length === 10) return '+1' + n;
+        if (n.length === 11 && n.startsWith('1')) return '+' + n;
+        return null;
+    }
+
+    #normalizeDefault(n, code) {
+        n = n.replace(/^0+/, '');
+        if (n.startsWith(code.slice(1))) return '+' + n;
+        return code + n;
+    }
+
+    #formatByType(e164, type) {
+        switch (type) {
+            case 'contact': return e164;
+            case 'document': return this.#formatDocument(e164);
+            case 'web': return `tel:${e164}`;
+            default: return e164;
         }
-        return result.trim();
-    }
-
-    isValidMain(digits) {
-        return this.cfg.lens.includes(digits.length);
-    }
-
-    isValidExt(ext) {
-        const digits = ext.replace(/[^\d]/g, '');
-        return digits.length >= this.cfg.extLens[0] &&
-            digits.length <= this.cfg.extLens[1] &&
-            /^\d+$/.test(digits);
     }
 
     /**
-     * Normalize to E.164 format
-     * Priority: libphonenumber-js → fallback
+     * Format for documents - uses libphonenumber for proper formatting
      */
-    toE164(num) {
-        const clean = num.replace(/[^\d+]/g, '');
-
-        // Primary: libphonenumber-js
-        if (this.lib) {
+    #formatDocument(e164) {
+        // Try libphonenumber formatting first
+        if (libPhone) {
             try {
-                const parsed = this.lib.parsePhoneNumber(clean, this.country);
-                if (parsed?.isValid()) return parsed.format('E.164');
-            } catch {}
-        }
-
-        // Fallback: manual normalization
-        return this.manualNormalize(clean);
-    }
-
-    /**
-     * Manual E.164 normalization (fallback)
-     */
-    manualNormalize(clean) {
-        const {
-            code
-        } = this.cfg;
-
-        if (clean.startsWith(code)) return clean;
-        if (clean.startsWith('+')) return clean;
-
-        // Country-specific rules
-        const rules = {
-            RU: n => {
-                if (n.startsWith('8') && n.length === 11) return '+7' + n.slice(1);
-                if (n.startsWith('7') && n.length === 11) return '+' + n;
-                if (n.length === 10) return '+7' + n; // Правильно для 10 цифр
-                return code + n.replace(/^0+/, ''); // Фолбэк для остальных случаев
-            },
-
-            US: n => {
-                if (n.length === 10) return '+1' + n;
-                if (n.startsWith('1') && n.length === 11) return '+' + n;
-                return '+1' + n;
-            },
-            CA: n => {
-                if (n.length === 10) return '+1' + n;
-                if (n.startsWith('1') && n.length === 11) return '+' + n;
-                return '+1' + n;
-            }
-        };
-
-        return (rules[this.country] || (n => code + n.replace(/^0+/, '')))(clean);
-    }
-
-    /**
-     * Format for documents (E.123 international or national)
-     * Priority: libphonenumber-js → fallback
-     */
-    formatDocument(e164) {
-        // Primary: libphonenumber-js
-        if (this.lib) {
-            try {
-                const parsed = this.lib.parsePhoneNumber(e164);
-                if (parsed?.isValid()) {
-                    return this.docFormat === 'natl' ?
-                        parsed.formatNational() :
-                        parsed.formatInternational();
+                const parsed = libPhone.parsePhoneNumber(e164);
+                if (parsed) {
+                    if (this.#docFormat === 'natl') {
+                        return parsed.formatNational();
+                    }
+                    return parsed.formatInternational();
                 }
-            } catch {}
+            } catch {
+                // Fall through to manual formatting
+            }
         }
-
-        // Fallback: manual formatting
-        return this.manualFormat(e164);
-    }
-
-    /**
-     * Manual formatting (fallback)
-     */
-    manualFormat(e164) {
-        const {
-            code
-        } = this.cfg;
-        if (!e164.startsWith(code)) return e164;
-
+        
+        // Manual formatting fallback
+        const code = this.#extractCountryCode(e164);
+        if (!code) return e164;
         const national = e164.slice(code.length);
-
-        // International format patterns
-        const intlFormats = {
-            RU: n => `+7 ${n.slice(0,3)} ${n.slice(3,6)} ${n.slice(6,8)} ${n.slice(8)}`,
-            US: n => `+1 ${n.slice(0,3)} ${n.slice(3,6)} ${n.slice(6)}`,
-            CA: n => `+1 ${n.slice(0,3)} ${n.slice(3,6)} ${n.slice(6)}`,
-            DE: n => `+49 ${n.slice(0,2)} ${n.slice(2)}`,
-            GB: n => `+44 ${n.slice(0,2)} ${n.slice(2)}`,
-            FR: n => `+33 ${n.slice(0,1)} ${n.slice(1,3)} ${n.slice(3,5)} ${n.slice(5,7)} ${n.slice(7)}`
-        };
-
-        // National format patterns (with parentheses and hyphens)
-        const natlFormats = {
-            RU: n => `+7 (${n.slice(0,3)}) ${n.slice(3,6)}-${n.slice(6,8)}-${n.slice(8)}`,
-            US: n => `+1 (${n.slice(0,3)}) ${n.slice(3,6)}-${n.slice(6)}`,
-            CA: n => `+1 (${n.slice(0,3)}) ${n.slice(3,6)}-${n.slice(6)}`,
-            DE: n => `+49 (${n.slice(0,2)}) ${n.slice(2)}`,
-            GB: n => `+44 (${n.slice(0,2)}) ${n.slice(2)}`,
-            FR: n => `+33 (${n.slice(0,1)}) ${n.slice(1,3)} ${n.slice(3,5)} ${n.slice(5,7)} ${n.slice(7)}`
-        };
-
-        const formats = this.docFormat === 'natl' ? natlFormats : intlFormats;
-        return formats[this.country] ? formats[this.country](national) : e164;
-    }
-
-    /**
-     * Format for contacts (E.164)
-     * Priority: libphonenumber-js → fallback
-     */
-    formatContact(e164) {
-        if (this.lib) {
-            try {
-                const parsed = this.lib.parsePhoneNumber(e164);
-                if (parsed?.isValid()) return parsed.format('E.164');
-            } catch {}
+        
+        // National format
+        if (this.#docFormat === 'natl') {
+            if (code === '+7' && national.length === 10) {
+                return `8 (${national.slice(0,3)}) ${national.slice(3,6)}-${national.slice(6,8)}-${national.slice(8)}`;
+            }
+            if (code === '+1' && national.length === 10) {
+                return `(${national.slice(0,3)}) ${national.slice(3,6)}-${national.slice(6)}`;
+            }
+            return `0${national}`;  // Generic fallback
         }
-        return e164;
-    }
-
-    /**
-     * Format for web (RFC 3966 tel: URI)
-     * Priority: libphonenumber-js → fallback
-     */
-    formatWeb(e164) {
-        if (this.lib) {
-            try {
-                const parsed = this.lib.parsePhoneNumber(e164);
-                if (parsed?.isValid()) return `tel:${parsed.format('E.164')}`;
-            } catch {}
+        
+        // International format
+        if (code === '+7' && national.length === 10) {
+            return `+7 ${national.slice(0,3)} ${national.slice(3,6)} ${national.slice(6,8)} ${national.slice(8)}`;
         }
-        return `tel:${e164}`;
+        if (code === '+1' && national.length === 10) {
+            return `+1 ${national.slice(0,3)} ${national.slice(3,6)} ${national.slice(6)}`;
+        }
+        return `${code} ${national}`;
     }
 
-    /**
-     * Format extension for output type
-     */
-    formatExtension(ext, type) {
+    #formatExtension(ext, type) {
         if (!ext) return '';
+        const digits = String(ext).replace(/[^\d]/g, '');
+        if (digits.length < this.#cfg.extLen[0] || digits.length > this.#cfg.extLen[1]) return '';
         switch (type) {
-            case 'contact':
-                return `,${ext}`;
-            case 'document':
-                return ` ${this.extLabel} ${ext}`;
-            case 'web':
-                return `;ext=${ext}`;
-            default:
-                return `,${ext}`;
+            case 'contact': return `,${digits}`;
+            case 'document': return ` ${this.#extLabel} ${digits}`;
+            case 'web': return `;ext=${digits}`;
+            default: return `,${digits}`;
         }
-    }
-
-    /**
-     * Main entry point: format phone number
-     * @param {string} input - Raw phone number
-     * @param {'contact'|'document'|'web'} type - Output format type
-     * @returns {string|null} Formatted number or null if invalid
-     */
-    format(input, type) {
-        if (!input?.trim()) return null;
-
-        // Step 1: Parse main number and extension
-        const {
-            main,
-            ext
-        } = this.parse(input);
-        if (!main) return null;
-
-        // Step 2: Normalize to E.164 (libphonenumber-js priority)
-        const e164 = this.toE164(main);
-        if (!e164 || e164.length < 8) return null;
-
-        // Step 3: Format based on output type (libphonenumber-js priority)
-        let formatted;
-        switch (type) {
-            case 'contact':
-                formatted = this.formatContact(e164);
-                break;
-            case 'document':
-                formatted = this.formatDocument(e164);
-                break;
-            case 'web':
-                formatted = this.formatWeb(e164);
-                break;
-            default:
-                formatted = e164;
-        }
-
-        // Step 4: Append extension in appropriate format
-        return formatted + this.formatExtension(ext, type);
     }
 }
 
-// PopClip module exports
-module.exports = {
-    actions: [{
-            title: {
-                ru: "📱 Контакты",
-                en: "📱 Contacts",
-                de: "📱 Kontakte",
-                fr: "📱 Contacts",
-                zh: "📱 联系人",
-                ja: "📱 連絡先",
-                it: "📱 Contatti",
-                es: "📱 Contactos",
-                nl: "📱 Contacten",
-                pl: "📱 Kontakty",
-                "pt-br": "📱 Contatos",
-                ko: "📱 연락처",
-                vi: "📱 Danh bạ",
-                tr: "📱 Kişiler",
-                sk: "📱 Kontakty",
-                da: "📱 Kontakter"
-            },
-            icon: "iconify:tabler:address-book",
-            code: (input, options) => {
-                if (!input.text?.trim()) return null;
-                const formatter = new PhoneFormatter(
-                    options.country || 'RU',
-                    options.docFormat
-                );
-                return formatter.format(input.text, 'contact');
-            }
-        },
-        {
-            title: {
-                ru: "📄 Документы",
-                en: "📄 Documents",
-                de: "📄 Dokumente",
-                fr: "📄 Documents",
-                zh: "📄 文档",
-                ja: "📄 文書",
-                it: "📄 Documenti",
-                es: "📄 Documentos",
-                nl: "📄 Documenten",
-                pl: "📄 Dokumenty",
-                "pt-br": "📄 Documentos",
-                ko: "📄 문서",
-                vi: "📄 Tài liệu",
-                tr: "📄 Belgeler",
-                sk: "📄 Dokumenty",
-                da: "📄 Dokumenter"
-            },
-            icon: "iconify:tabler:file-text",
-            code: (input, options) => {
-                if (!input.text?.trim()) return null;
-                const formatter = new PhoneFormatter(
-                    options.country || 'RU',
-                    options.docFormat || 'intl'
-                );
-                return formatter.format(input.text, 'document');
-            }
-        },
-        {
-            title: {
-                ru: "🌐 Веб",
-                en: "🌐 Web",
-                de: "🌐 Web",
-                fr: "🌐 Web",
-                zh: "🌐 网页",
-                ja: "🌐 ウェブ",
-                it: "🌐 Web",
-                es: "🌐 Web",
-                nl: "🌐 Web",
-                pl: "🌐 Sieć",
-                "pt-br": "🌐 Web",
-                ko: "🌐 웹",
-                vi: "🌐 Web",
-                tr: "🌐 Web",
-                sk: "🌐 Web",
-                da: "🌐 Web"
-            },
-            icon: "iconify:tabler:world",
-            code: (input, options) => {
-                if (!input.text?.trim()) return null;
-                const formatter = new PhoneFormatter(
-                    options.country || 'RU',
-                    options.docFormat
-                );
-                return formatter.format(input.text, 'web');
-            }
+// =============================================================================
+// ACTION FACTORY
+// =============================================================================
+
+const ACTION_TITLES = {
+    contact: {
+        ru: "📱 Контакты", en: "📱 Contacts", de: "📱 Kontakte",
+        fr: "📱 Contacts", zh: "📱 联系人", ja: "📱 連絡先",
+        it: "📱 Contatti", es: "📱 Contactos", nl: "📱 Contacten",
+        pl: "📱 Kontakty", "pt-br": "📱 Contatos", ko: "📱 연락처",
+        vi: "📱 Danh bạ", tr: "📱 Kişiler", sk: "📱 Kontakty", da: "📱 Kontakter"
+    },
+    document: {
+        ru: "📄 Документы", en: "📄 Documents", de: "📄 Dokumente",
+        fr: "📄 Documents", zh: "📄 文档", ja: "📄 文書",
+        it: "📄 Documenti", es: "📄 Documentos", nl: "📄 Documenten",
+        pl: "📄 Dokumenty", "pt-br": "📄 Documentos", ko: "📄 문서",
+        vi: "📄 Tài liệu", tr: "📄 Belgeler", sk: "📄 Dokumenty", da: "📄 Dokumenter"
+    },
+    web: {
+        ru: "🌐 Веб", en: "🌐 Web", de: "🌐 Web",
+        fr: "🌐 Web", zh: "🌐 网页", ja: "🌐 ウェブ",
+        it: "🌐 Web", es: "🌐 Web", nl: "🌐 Web",
+        pl: "🌐 Sieć", "pt-br": "🌐 Web", ko: "🌐 웹",
+        vi: "🌐 Web", tr: "🌐 Web", sk: "🌐 Web", da: "🌐 Web"
+    }
+};
+
+const ACTION_ICONS = {
+    contact: "iconify:tabler:address-book",
+    document: "iconify:tabler:file-text",
+    web: "iconify:tabler:world"
+};
+
+/**
+ * Create action for Contacts format (E.164)
+ */
+function createContactAction() {
+    return {
+        title: ACTION_TITLES.contact,
+        icon: ACTION_ICONS.contact,
+        regex: PHONE_REGEX,
+        code: (input, options) => {
+            const formatter = new PhoneFormatter(options.country, options.docFormat);
+            return formatter.format(input.text, 'contact');
         }
+    };
+}
+
+/**
+ * Create action for Documents format (E.123)
+ * Supports Option (⌥) modifier to invert format (intl ↔ natl)
+ */
+function createDocumentAction() {
+    return {
+        title: ACTION_TITLES.document,
+        icon: ACTION_ICONS.document,
+        regex: PHONE_REGEX,
+        code: (input, options) => {
+            // Check if Option (⌥) is held
+            const optionHeld = popclip.modifiers.option;
+            
+            // Invert format if Option is held
+            let docFormat = options.docFormat || 'intl';
+            if (optionHeld) {
+                docFormat = docFormat === 'intl' ? 'natl' : 'intl';
+            }
+            
+            const formatter = new PhoneFormatter(options.country, docFormat);
+            return formatter.format(input.text, 'document');
+        }
+    };
+}
+
+/**
+ * Create action for Web format (RFC 3966)
+ */
+function createWebAction() {
+    return {
+        title: ACTION_TITLES.web,
+        icon: ACTION_ICONS.web,
+        regex: PHONE_REGEX,
+        code: (input, options) => {
+            const formatter = new PhoneFormatter(options.country, options.docFormat);
+            return formatter.format(input.text, 'web');
+        }
+    };
+}
+
+// =============================================================================
+// MODULE EXPORTS
+// =============================================================================
+
+module.exports = {
+    actions: [
+        createContactAction(),
+        createDocumentAction(),
+        createWebAction()
     ]
 };
