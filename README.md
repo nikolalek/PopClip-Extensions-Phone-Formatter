@@ -1,97 +1,218 @@
 <p align="center">
-  <a href="README.en.md"><img src="https://img.shields.io/badge/lang-English 🇬🇧-blue?style=for-the-badge"></a>
-  <a href="https://www.popclip.app/extensions/"><img src="https://img.shields.io/badge/PopClip-Extension-blue?style=for-the-badge&logo=apple">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge"></a>
+  <a href="README.ru.md"><img src="https://img.shields.io/badge/lang-Русский-red?style=flat-square"></a>
+  <img src="https://img.shields.io/badge/PopClip-4200+-blue?style=flat-square&logo=apple">
+  <img src="https://img.shields.io/badge/version-2.5.0-green?style=flat-square">
+  <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square">
 </p>
 
-# 📱 PopClip Phone Formatter
+<h1 align="center">📱 PopClip Phone Formatter</h1>
 
-Расширение PopClip для интеллектуального форматирования телефонных номеров с поддержкой добавочных номеров и локализации на 15 языков.
+<p align="center">
+  <strong>Intelligent phone number formatting for macOS</strong><br>
+  <sub>Supports 42 countries • 15 languages • Extensions</sub>
+</p>
 
-## Скриншоты
 ---
-### Панель настроек PopClip
-Выбор локали для форматирования номера телефона.
-![Панель настроек PopClip в действии](screenshot1.png)
----
-### Панель PopClip
-Кнопка форматирования появляется при выделении номера.
-![Панель PopClip в действии](screenshot.png)
----
-## ✨ Возможности
 
-- **Три формата вывода**:
-  - 📱 **Контакты**: E.164 формат (`+79001234567,123`)
-  - 📄 **Документы**: Международный формат (`+7 900 123 45 67 доб. 123`)
-  - 🌐 **Веб**: tel: URI (`tel:+79001234567;ext=123`)
+## Features
 
-- **Поддержка добавочных номеров**: Автоматическое распознавание и форматирование
-- **42 страны**: От России до Люксембурга
-- **15 языков интерфейса**: Полная локализация
-- **Умное распознавание**: Работает с различными форматами ввода
+**Three output formats:**
 
-## 🚀 Установка
+| Format | Output | Use Case |
+|--------|--------|----------|
+| 📱 **Contacts** | `+19175551234,123` | Address books, CRM |
+| 📄 **Documents** | `+1 917 555 1234 ext. 123` | Emails, documents |
+| 🌐 **Web** | `tel:+19175551234;ext=123` | Clickable links |
 
-1. Убедитесь, что у вас установлен [PopClip](https://pilotmoon.com/popclip/)
-2. Скачайте `phone-formatter.popclipext` из [Releases](../../releases/latest)
-3. Дважды кликните по файлу для установки
-4. Настройте страну по умолчанию в параметрах расширения
+**Key capabilities:**
 
-## 📖 Использование
+- ✅ Automatic extension detection (`ext.`, `x`, `#`, `доб.`)
+- ✅ Smart parsing of messy input formats
+- ✅ Validated against `libphonenumber-js`
+- ✅ Modifier key: hold **Option (⌥)** to invert format
+- ✅ Full fallback when library unavailable
 
-1. Выделите номер телефона в любом приложении
-2. В меню PopClip выберите нужный формат:
-   - 📱 **Контакты** — для добавления в телефонную книгу
-   - 📄 **Документы** — для вставки в документы
-   - 🌐 **Веб** — для создания кликабельных ссылок
+## Screenshots
 
-### Примеры
+| Settings Panel | PopClip Menu |
+|:--------------:|:------------:|
+| <img src="screenshot1.png" width="300"> | <img src="screenshot.png" width="300"> |
 
-| Ввод | Контакты | Документы | Веб |
-|------|----------|-----------|-----|
+## Installation
+
+1. Install [PopClip](https://pilotmoon.com/popclip/) (version 4200+)
+2. Download `phone-formatter.popclipext` from [Releases](https://github.com/nikolalek/popclip-phone-formatter/releases/latest)
+3. Double-click to install
+4. Set your default country in extension settings
+
+## Usage
+
+**Basic:**
+1. Select any phone number
+2. Click the desired format button
+
+**Advanced:**
+- Hold **Option (⌥)** when clicking **Documents** to invert format (intl ↔ natl)
+
+### Supported Input Formats
+
+| Input Type | Example |
+|------------|---------|
+| International | `+1 (917) 555-1234` |
+| National | `(917) 555-1234` |
+| Plain digits | `19175551234` |
+| With extension | `+19175551234 ext. 123` |
+| URI format | `tel:+19175551234` |
+| Multiple plus signs | `++19175551234` |
+
+### Output Examples
+
+| Input | Contacts | Documents (intl) | Web |
+|-------|----------|------------------|-----|
+| `(917) 555-1234` | `+19175551234` | `+1 917 555 1234` | `tel:+19175551234` |
 | `8 900 123 45 67` | `+79001234567` | `+7 900 123 45 67` | `tel:+79001234567` |
-| `+7(900)123-45-67 доб.123` | `+79001234567,123` | `+7 900 123 45 67 доб. 123` | `tel:+79001234567;ext=123` |
-| `tel:+19175551234;ext=456` | `+19175551234,456` | `+1 917 555 1234 ext. 456` | `tel:+19175551234;ext=456` |
+| `+44 20 7946 0958 x123` | `+442079460958,123` | `+44 20 7946 0958 ext. 123` | `tel:+442079460958;ext=123` |
 
-## 🌍 Поддерживаемые страны
+## Supported Countries
 
 <details>
-<summary>Полный список (42 страны)</summary>
+<summary><strong>View all 42 countries</strong></summary>
 
-| Страна | Код | Длина номера | Добавочные |
-|--------|-----|--------------|------------|
-| 🇷🇺 Россия | +7 | 10-11 | 2-6 цифр |
-| 🇺🇸 США | +1 | 10-11 | 2-6 цифр |
-| 🇩🇪 Германия | +49 | 10-12 | 2-5 цифр |
-| 🇬🇧 Великобритания | +44 | 10-11 | 2-5 цифр |
-| 🇫🇷 Франция | +33 | 10 | 2-4 цифры |
-| ... и 37 других стран |
+| Country | Code | National Length | Ext. Length |
+|---------|------|-----------------|-------------|
+| 🇷🇺 Russia | +7 | 10 | 2-6 |
+| 🇺🇸 United States | +1 | 10 | 2-6 |
+| 🇬🇧 United Kingdom | +44 | 10 | 2-5 |
+| 🇩🇪 Germany | +49 | 10-11 | 2-5 |
+| 🇫🇷 France | +33 | 9 | 2-4 |
+| 🇨🇳 China | +86 | 11 | 2-5 |
+| 🇯🇵 Japan | +81 | 10 | 2-4 |
+| 🇰🇷 South Korea | +82 | 9-10 | 2-5 |
+| 🇧🇷 Brazil | +55 | 10-11 | 2-5 |
+| 🇮🇳 India | +91 | 10 | 2-5 |
+| 🇦🇺 Australia | +61 | 9 | 2-5 |
+| 🇨🇦 Canada | +1 | 10 | 2-6 |
+| 🇲🇽 Mexico | +52 | 10-11 | 2-4 |
+| 🇮🇹 Italy | +39 | 9-11 | 2-4 |
+| 🇪🇸 Spain | +34 | 9 | 2-4 |
+| 🇳🇱 Netherlands | +31 | 9 | 2-4 |
+| 🇵🇱 Poland | +48 | 9 | 2-4 |
+| 🇹🇷 Turkey | +90 | 10 | 2-4 |
+| 🇹🇭 Thailand | +66 | 9 | 2-4 |
+| 🇻🇳 Vietnam | +84 | 9-10 | 2-4 |
+| 🇸🇪 Sweden | +46 | 7-9 | 2-4 |
+| 🇳🇴 Norway | +47 | 8 | 2-4 |
+| 🇩🇰 Denmark | +45 | 8 | 2-4 |
+| 🇫🇮 Finland | +358 | 9 | 2-4 |
+| 🇦🇹 Austria | +43 | 10-11 | 2-4 |
+| 🇨🇭 Switzerland | +41 | 9 | 2-4 |
+| 🇧🇪 Belgium | +32 | 9 | 2-4 |
+| 🇮🇪 Ireland | +353 | 9 | 2-4 |
+| 🇵🇹 Portugal | +351 | 9 | 2-4 |
+| 🇬🇷 Greece | +30 | 10 | 2-4 |
+| 🇨🇿 Czech Republic | +420 | 9 | 2-4 |
+| 🇭🇺 Hungary | +36 | 9 | 2-4 |
+| 🇷🇴 Romania | +40 | 9 | 2-4 |
+| 🇧🇬 Bulgaria | +359 | 8-9 | 2-4 |
+| 🇭🇷 Croatia | +385 | 8-9 | 2-4 |
+| 🇸🇮 Slovenia | +386 | 8 | 2-4 |
+| 🇸🇰 Slovakia | +421 | 9 | 2-4 |
+| 🇱🇹 Lithuania | +370 | 8 | 2-4 |
+| 🇱🇻 Latvia | +371 | 8 | 2-4 |
+| 🇪🇪 Estonia | +372 | 7-8 | 2-4 |
+| 🇨🇾 Cyprus | +357 | 8 | 2-4 |
+| 🇱🇺 Luxembourg | +352 | 9 | 2-4 |
 
 </details>
 
-## 🛠 Технические детали
+## Localization
 
-- **Библиотека**: [libphonenumber-js](https://unpkg.com/libphonenumber-js/bundle/libphonenumber-js.min.js) для точного парсинга
-- **Fallback**: Собственный парсер при недоступности библиотеки
-- **Совместимость**: PopClip 4200+
-- **Локализация**: 15 языков интерфейса
+Interface available in 15 languages:
 
-## 📝 Лицензия
+> English, Русский, Deutsch, Français, 中文, 日本語, Italiano, Español, Nederlands, Polski, Português (BR), 한국어, Tiếng Việt, Türkçe, Dansk
 
-MIT License - см. [LICENSE](LICENSE)
+## Technical Details
 
-## 🤝 Вклад в проект
+<details>
+<summary><strong>Architecture</strong></summary>
 
-1. Форкните репозиторий
-2. Создайте ветку для новой функции
-3. Внесите изменения и создайте pull request
+```
+Input → Clean & Parse Extension → libphonenumber-js
+                                        ↓
+                                   isValid()?
+                                   ┌────┴────┐
+                                  YES        NO
+                                   ↓          ↓
+                             Format E.164   REJECT
+                                   ↓
+                        Format by type (contact/document/web)
+                                   ↓
+                          Add extension if present
+```
 
-## 🐛 Сообщить об ошибке
+**Validation flow:**
+1. Clean input (remove garbage, fix `+++` → `+`)
+2. Try `libphonenumber-js` parsing
+3. If parsed but `isValid() = false` → reject
+4. If exception → manual fallback for local formats
+5. Format according to output type
 
-Создайте [issue](../../issues) с описанием проблемы и примером номера.
+</details>
+
+<details>
+<summary><strong>Dependencies</strong></summary>
+
+- **Runtime**: [libphonenumber-js](https://github.com/catamphetamine/libphonenumber-js) (bundled)
+- **Platform**: PopClip 4200+
+- **OS**: macOS 11+
+
+</details>
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Reporting Issues
+
+Found a bug? Please [open an issue](https://github.com/nikolalek/popclip-phone-formatter/issues) with:
+
+- Input phone number
+- Expected output
+- Actual output
+- PopClip version
+
+## Changelog
+
+### v2.5.0
+- **Critical fix**: Numbers with `isValid()=false` now rejected (not fallback)
+- Fixed handling of multiple plus signs (`++`, `+++`, etc.)
+- Added Option (⌥) modifier for format inversion
+- Improved country detection from country code
+- 41/41 tests passing
+
+<details>
+<summary><strong>Previous versions</strong></summary>
+
+### v2.4.0
+- Added Option (⌥) modifier support
+- Improved document formatting
+
+### v2.3.0
+- Added modifier key infrastructure
+- Fixed extension parsing
+
+</details>
+
+## License
+
+[MIT](LICENSE) © nikolalek
 
 ---
 
 <p align="center">
-  Сделано с ❤️ для сообщества PopClip
+  <sub>Made with ❤️ for the PopClip community</sub>
 </p>
