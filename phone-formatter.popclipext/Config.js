@@ -169,7 +169,7 @@ const COUNTRY = {
     IE: { lens: [9], extLen: [2, 4], code: '+353', maxNational: 9 },
     PT: { lens: [9], extLen: [2, 4], code: '+351', maxNational: 9 },
     GR: { lens: [10], extLen: [2, 4], code: '+30', maxNational: 10 },
-    FI: { lens: [9], extLen: [2, 4], code: '+358', maxMaximum: 9 },
+    FI: { lens: [9], extLen: [2, 4], code: '+358', maxNational: 9 },
     CZ: { lens: [9], extLen: [2, 4], code: '+420', maxNational: 9 },
     HU: { lens: [9], extLen: [2, 4], code: '+36', maxNational: 9 },
     PL: { lens: [9], extLen: [2, 4], code: '+48', maxNational: 9 },

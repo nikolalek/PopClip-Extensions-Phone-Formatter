@@ -7,6 +7,16 @@
 #   make list             - показать релизы
 #   make rollback V=x.x.x - удалить релиз
 
+# ---
+# 1. Обновить версию
+#    make version V=2.5.1
+# 2. Закоммить
+#    git add . && git commit -m "release: v2.5.1"
+# 3. Создай релиз
+#    make release
+# Готово! Релиз на GitHub с тегом v2.5.1
+# ---
+
 NAME     := phone-formatter
 EXT      := $(NAME).popclipext
 ZIP      := $(NAME).popclipextz
