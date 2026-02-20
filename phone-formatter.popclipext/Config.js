@@ -37,7 +37,6 @@
 //   da: Formatering af telefonnumre med lokalnumre iht. E.164, E.123, RFC 3966 standarder
 // icon: iconify:tabler:phone
 // popclip version: 4200
-// after: paste-result
 // options:
 //   - identifier: country
 //     type: multiple
@@ -88,7 +87,7 @@
 "use strict";
 
 /**
- * PopClip Phone Formatter v2.5.0
+ * PopClip Phone Formatter v2.6.0
  * 
  * Formats phone numbers to international standards:
  * - E.164: +79123456789 (machine-readable format)
@@ -216,6 +215,17 @@ const EXT_PATTERNS = [
     /(.+)\s*[x#*]\s*(\d+)$/i
 ];
 
+const VANITY_MAP = {
+    A: '2', B: '2', C: '2',
+    D: '3', E: '3', F: '3',
+    G: '4', H: '4', I: '4',
+    J: '5', K: '5', L: '5',
+    M: '6', N: '6', O: '6',
+    P: '7', Q: '7', R: '7', S: '7',
+    T: '8', U: '8', V: '8',
+    W: '9', X: '9', Y: '9', Z: '9'
+};
+
 const PHONE_REGEX = /(?:\+?\d[\d\s\-\(\)]{6,}\d)|\d{7,}/;
 const MIN_PHONE_DIGITS = 7;
 const MAX_E164_LENGTH = 15;
@@ -245,24 +255,32 @@ class PhoneFormatter {
      * @returns {string|null} Formatted number or null if invalid
      */
     format(input, type) {
-        // Step 1: Validate input
-        const trimmed = this.#validateInput(input);
+        // Step 1: Pre-validate (basic string check)
+        if (!input || typeof input !== 'string') return null;
+        const raw = input.trim();
+        if (!raw) return null;
+
+        // Step 2: Expand vanity letters to digits (e.g. 1-800-FLOWERS)
+        const expanded = this.#expandVanity(raw);
+
+        // Step 3: Validate digit count after vanity expansion
+        const trimmed = this.#validateInput(expanded);
         if (!trimmed) return null;
 
-        // Step 2: Parse extension from input
-        const { main, ext } = this.#parse(trimmed);
+        // Step 4: Parse extension from input
+        const { main, ext, extExplicit } = this.#parse(trimmed);
         if (!main) return null;
 
-        // Step 3: Normalize to E.164 (libphonenumber priority!)
+        // Step 5: Normalize to E.164 (libphonenumber priority!)
         const e164 = this.#toE164(main);
         if (!e164) return null;
 
-        // Step 4: Format by type
+        // Step 6: Format by type
         const formatted = this.#formatByType(e164, type);
         if (!formatted) return null;
 
-        // Step 5: Add extension if present
-        return formatted + this.#formatExtension(ext, type);
+        // Step 7: Add extension if present
+        return formatted + this.#formatExtension(ext, type, extExplicit);
     }
 
     #validateInput(input) {
@@ -274,9 +292,15 @@ class PhoneFormatter {
         return trimmed;
     }
 
+    #expandVanity(input) {
+        if (!/[A-Z]{3,}/.test(input)) return input;
+        return input.replace(/[A-Z]{3,}/g, word => word.split('').map(ch => VANITY_MAP[ch] || ch).join(''));
+    }
+
     /**
      * Parse extension from phone number
      * Supports: comma, semicolon, ext., x, #, *, textual labels
+     * Returns extExplicit=true for unambiguous tel: URI form (ext=N)
      */
     #parse(input) {
         // Remove empty brackets and normalize whitespace
@@ -286,18 +310,18 @@ class PhoneFormatter {
             .trim();
 
         // Try each extension pattern
-        for (const pattern of EXT_PATTERNS) {
-            const match = txt.match(pattern);
+        for (let i = 0; i < EXT_PATTERNS.length; i++) {
+            const match = txt.match(EXT_PATTERNS[i]);
             if (match) {
                 let main = match[1].trim();
                 if (main.toLowerCase().startsWith('tel:')) {
                     main = main.slice(4);
                 }
-                return { main, ext: match[2] };
+                return { main, ext: match[2], extExplicit: i === 0 };
             }
         }
 
-        return { main: txt, ext: null };
+        return { main: txt, ext: null, extExplicit: false };
     }
 
     /**
@@ -424,37 +448,95 @@ class PhoneFormatter {
                 // Fall through to manual formatting
             }
         }
-        
+
         // Manual formatting fallback
         const code = this.#extractCountryCode(e164);
         if (!code) return e164;
         const national = e164.slice(code.length);
-        
-        // National format
+
         if (this.#docFormat === 'natl') {
-            if (code === '+7' && national.length === 10) {
-                return `8 (${national.slice(0,3)}) ${national.slice(3,6)}-${national.slice(6,8)}-${national.slice(8)}`;
-            }
-            if (code === '+1' && national.length === 10) {
-                return `(${national.slice(0,3)}) ${national.slice(3,6)}-${national.slice(6)}`;
-            }
-            return `0${national}`;  // Generic fallback
+            return this.#manualFormatNational(code, national);
         }
-        
-        // International format
-        if (code === '+7' && national.length === 10) {
-            return `+7 ${national.slice(0,3)} ${national.slice(3,6)} ${national.slice(6,8)} ${national.slice(8)}`;
-        }
-        if (code === '+1' && national.length === 10) {
-            return `+1 ${national.slice(0,3)} ${national.slice(3,6)} ${national.slice(6)}`;
-        }
-        return `${code} ${national}`;
+        return this.#manualFormatInternational(code, national);
     }
 
-    #formatExtension(ext, type) {
+    #manualFormatNational(code, n) {
+        // RU: 8 (XXX) XXX-XX-XX
+        if (code === '+7' && n.length === 10) {
+            return `8 (${n.slice(0,3)}) ${n.slice(3,6)}-${n.slice(6,8)}-${n.slice(8)}`;
+        }
+        // US/CA: (XXX) XXX-XXXX
+        if (code === '+1' && n.length === 10) {
+            return `(${n.slice(0,3)}) ${n.slice(3,6)}-${n.slice(6)}`;
+        }
+        // DE: 0XXX XXXXXXX (area code 3-5 digits, subscriber 3-7 digits)
+        if (code === '+49') {
+            if (n.length === 10) return `0${n.slice(0,3)} ${n.slice(3)}`;
+            if (n.length === 11) return `0${n.slice(0,4)} ${n.slice(4)}`;
+        }
+        // FR: 0X XX XX XX XX (always 9 national digits, first digit is area/mobile prefix)
+        if (code === '+33' && n.length === 9) {
+            return `0${n[0]} ${n.slice(1,3)} ${n.slice(3,5)} ${n.slice(5,7)} ${n.slice(7)}`;
+        }
+        // GB: 0XXXX XXXXXX or 0XXX XXX XXXX
+        if (code === '+44') {
+            if (n.length === 10) return `0${n.slice(0,4)} ${n.slice(4)}`;
+            if (n.length === 9)  return `0${n.slice(0,3)} ${n.slice(3,6)} ${n.slice(6)}`;
+        }
+        // AU: 0X XXXX XXXX (geographic) or 04XX XXX XXX (mobile)
+        if (code === '+61' && n.length === 9) {
+            if (n[0] === '4') return `0${n.slice(0,3)} ${n.slice(3,6)} ${n.slice(6)}`;
+            return `0${n[0]} ${n.slice(1,5)} ${n.slice(5)}`;
+        }
+        // BR: (XX) XXXX-XXXX or (XX) XXXXX-XXXX (mobile)
+        if (code === '+55') {
+            if (n.length === 10) return `(${n.slice(0,2)}) ${n.slice(2,6)}-${n.slice(6)}`;
+            if (n.length === 11) return `(${n.slice(0,2)}) ${n.slice(2,7)}-${n.slice(7)}`;
+        }
+        return `0${n}`;
+    }
+
+    #manualFormatInternational(code, n) {
+        // RU: +7 XXX XXX XX XX
+        if (code === '+7' && n.length === 10) {
+            return `+7 ${n.slice(0,3)} ${n.slice(3,6)} ${n.slice(6,8)} ${n.slice(8)}`;
+        }
+        // US/CA: +1 XXX XXX XXXX
+        if (code === '+1' && n.length === 10) {
+            return `+1 ${n.slice(0,3)} ${n.slice(3,6)} ${n.slice(6)}`;
+        }
+        // DE: +49 XXX XXXXXXX
+        if (code === '+49') {
+            if (n.length === 10) return `+49 ${n.slice(0,3)} ${n.slice(3)}`;
+            if (n.length === 11) return `+49 ${n.slice(0,4)} ${n.slice(4)}`;
+        }
+        // FR: +33 X XX XX XX XX
+        if (code === '+33' && n.length === 9) {
+            return `+33 ${n[0]} ${n.slice(1,3)} ${n.slice(3,5)} ${n.slice(5,7)} ${n.slice(7)}`;
+        }
+        // GB: +44 XXXX XXXXXX or +44 XXX XXX XXXX
+        if (code === '+44') {
+            if (n.length === 10) return `+44 ${n.slice(0,4)} ${n.slice(4)}`;
+            if (n.length === 9)  return `+44 ${n.slice(0,3)} ${n.slice(3,6)} ${n.slice(6)}`;
+        }
+        // AU: +61 X XXXX XXXX or +61 4XX XXX XXX
+        if (code === '+61' && n.length === 9) {
+            if (n[0] === '4') return `+61 ${n.slice(0,3)} ${n.slice(3,6)} ${n.slice(6)}`;
+            return `+61 ${n[0]} ${n.slice(1,5)} ${n.slice(5)}`;
+        }
+        // BR: +55 XX XXXX-XXXX or +55 XX XXXXX-XXXX
+        if (code === '+55') {
+            if (n.length === 10) return `+55 ${n.slice(0,2)} ${n.slice(2,6)}-${n.slice(6)}`;
+            if (n.length === 11) return `+55 ${n.slice(0,2)} ${n.slice(2,7)}-${n.slice(7)}`;
+        }
+        return `${code} ${n}`;
+    }
+
+    #formatExtension(ext, type, extExplicit = false) {
         if (!ext) return '';
         const digits = String(ext).replace(/[^\d]/g, '');
-        if (digits.length < this.#cfg.extLen[0] || digits.length > this.#cfg.extLen[1]) return '';
+        const minLen = extExplicit ? 1 : this.#cfg.extLen[0];
+        if (digits.length < minLen || digits.length > this.#cfg.extLen[1]) return '';
         switch (type) {
             case 'contact': return `,${digits}`;
             case 'document': return ` ${this.#extLabel} ${digits}`;
@@ -500,11 +582,13 @@ const ACTION_ICONS = {
 
 /**
  * Create action for Contacts format (E.164)
+ * after: paste-result — replaces selected text with the normalized E.164 number
  */
 function createContactAction() {
     return {
         title: ACTION_TITLES.contact,
         icon: ACTION_ICONS.contact,
+        after: 'paste-result',
         regex: PHONE_REGEX,
         code: (input, options) => {
             const formatter = new PhoneFormatter(options.country, options.docFormat);
@@ -515,23 +599,23 @@ function createContactAction() {
 
 /**
  * Create action for Documents format (E.123)
+ * after: paste-result — replaces selected text with the human-readable number
  * Supports Option (⌥) modifier to invert format (intl ↔ natl)
  */
 function createDocumentAction() {
     return {
         title: ACTION_TITLES.document,
         icon: ACTION_ICONS.document,
+        after: 'paste-result',
         regex: PHONE_REGEX,
         code: (input, options) => {
-            // Check if Option (⌥) is held
             const optionHeld = popclip.modifiers.option;
-            
-            // Invert format if Option is held
+
             let docFormat = options.docFormat || 'intl';
             if (optionHeld) {
                 docFormat = docFormat === 'intl' ? 'natl' : 'intl';
             }
-            
+
             const formatter = new PhoneFormatter(options.country, docFormat);
             return formatter.format(input.text, 'document');
         }
@@ -540,11 +624,13 @@ function createDocumentAction() {
 
 /**
  * Create action for Web format (RFC 3966)
+ * after: copy-result — copies tel: URI to clipboard for insertion into HTML/code
  */
 function createWebAction() {
     return {
         title: ACTION_TITLES.web,
         icon: ACTION_ICONS.web,
+        after: 'copy-result',
         regex: PHONE_REGEX,
         code: (input, options) => {
             const formatter = new PhoneFormatter(options.country, options.docFormat);
