@@ -32,7 +32,7 @@ YELLOW   := \033[33m
 RED      := \033[31m
 RESET    := \033[0m
 
-.PHONY: all clean zip release check version list rollback
+.PHONY: all clean zip release check version list rollback test check-lib update-lib
 
 # === Основная цель ===
 release: check-clean check-version zip git-tag gh-release
@@ -94,6 +94,41 @@ gh-release: $(ZIP)
 		$$NOTES \
 		$(ZIP)
 
+# === Тесты ===
+test:
+	@node --check $(CONFIG) && echo "$(GREEN)✓$(RESET) Синтаксис Config.js"
+	@node test/phonefmt.test.js
+	@SEED=0x123456 node test/phonefmt.test.js
+
+# === Библиотека libphonenumber ===
+# Бандл собирается из npm-пакета libphonenumber-js (ветка max, CJS, offline).
+# Версия зашита баннером в начало libphonenumber-max.js — по нему check-lib
+# понимает, что встроено. Файлы без баннера (старые) всегда считаются устаревшими.
+LIBFILE  := $(EXT)/libphonenumber-max.js
+LIBPKG   := libphonenumber-js
+LIBBUILD := max/index.cjs
+LIBVER   = $(shell grep -o '$(LIBPKG)@[0-9][0-9.]*' $(LIBFILE) 2>/dev/null | head -1 | cut -d@ -f2)
+LIBLATEST = $(shell python3 -c "import json,urllib.request; print(json.load(urllib.request.urlopen('https://registry.npmjs.org/$(LIBPKG)/latest', timeout=30))['version'])" 2>/dev/null)
+
+check-lib:
+	@echo "Встроена: $(or $(LIBVER),неизвестно — обновите через make update-lib)"
+	@echo "Latest:   $(or $(LIBLATEST),реестр недоступен)"
+
+update-lib:
+	@if [ -z "$(LIBLATEST)" ]; then echo "$(RED)✗ Реестр npm недоступен$(RESET)"; exit 1; fi
+	@if [ -n "$(LIBVER)" ] && [ "$(LIBVER)" = "$(LIBLATEST)" ]; then \
+		echo "$(GREEN)✓$(RESET) Актуальна ($(LIBVER))"; \
+	else \
+		echo "Обновляю $(LIBVER) → $(LIBLATEST)..."; \
+		TMP=$$(mktemp -d) && \
+		curl -sL "https://registry.npmjs.org/$(LIBPKG)/-/$(LIBPKG)-$(LIBLATEST).tgz" -o "$$TMP/pkg.tgz" && \
+		tar -xzf "$$TMP/pkg.tgz" -C "$$TMP" && \
+		npx -y esbuild "$$TMP/package/$(LIBBUILD)" --bundle --platform=node --format=cjs --minify \
+			--banner:js="// $(LIBPKG)@$(LIBLATEST) max bundle (CJS, offline)" --outfile="$(LIBFILE)" && \
+		rm -rf "$$TMP" && \
+		$(MAKE) test; \
+	fi
+
 # === Утилиты ===
 check:
 	@echo "$(GREEN)=== Содержимое $(EXT) ===$(RESET)"
@@ -131,6 +166,9 @@ help:
 	@echo "  make release V=2.6  - создать релиз с версией 2.6"
 	@echo "  make version V=2.6  - обновить версию в файлах"
 	@echo "  make zip            - собрать .popclipextz"
+	@echo "  make test           - синтаксис + тесты форматирования"
+	@echo "  make check-lib      - встроенная vs последняя версия libphonenumber"
+	@echo "  make update-lib     - скачать и пересобрать бандл при необходимости"
 	@echo "  make check          - проверить состояние"
 	@echo "  make list           - показать релизы"
 	@echo "  make rollback V=x.x - удалить релиз"

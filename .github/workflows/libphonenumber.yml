@@ -1,0 +1,48 @@
+name: libphonenumber update check
+
+# Weekly check: compare bundled libphonenumber-max.js against npm latest.
+# If stale -> rebuild via `make update-lib` (runs tests) -> open a PR.
+# Broken bundles never get a PR: `make update-lib` fails when tests fail.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  lib:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Compare versions
+        id: check
+        run: |
+          echo "bundled=$(grep -o 'libphonenumber-js@[0-9][0-9.]*' phone-formatter.popclipext/libphonenumber-max.js 2>/dev/null | head -1 | cut -d@ -f2)" >> "$GITHUB_OUTPUT"
+          echo "latest=$(python3 -c "import json,urllib.request; print(json.load(urllib.request.urlopen('https://registry.npmjs.org/libphonenumber-js/latest', timeout=30))['version'])")" >> "$GITHUB_OUTPUT"
+
+      - name: Rebuild bundle if stale
+        if: steps.check.outputs.bundled != steps.check.outputs.latest
+        run: make update-lib
+
+      - name: Open update PR
+        if: steps.check.outputs.bundled != steps.check.outputs.latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VER="${{ steps.check.outputs.latest }}"
+          BR="auto/libphonenumber-$VER"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BR"
+          git add phone-formatter.popclipext/libphonenumber-max.js
+          git commit -m "chore: update libphonenumber-max.js to $VER"
+          git push -u origin "$BR"
+          gh pr create --title "chore: libphonenumber-max.js $VER" --body "Automated rebuild of the bundled max library (npm \`libphonenumber-js@$VER\` via esbuild). \`make test\` passed during rebuild — see workflow log."
