@@ -1,3 +1,31 @@
+## What's New
+
+### v2.6.0
+
+**Fixes:**
+- Space-separated extensions no longer dropped (`Durchwahl 123`, `poste 123`, `ext 123`, incl. quoted)
+- Bare separators `;123`, `#123` (incl. after closing quote) now parsed as extensions
+- `00` IDD prefix converts to `+` with libphonenumber validation
+- `#resolveCountry` actually resolves the country (was dead code: `'+7' === '7'` comparison)
+- `+60` maps to MY (Malaysia), was ID
+- Label typos fixed: `lista` → `lisa`, `DOB` removed; `uitb`, `interno`, `extn`, `extension` added for PHONE_REGEX parity
+
+**Testing:**
+- 3717 checks (7 seeds × 531): 50 countries, random valid numbers, 14 dirty formats, 10 extension styles — 100%
+- In-repo suite: `make test` (`test/phonefmt.test.js`)
+
+**Output safety:**
+- Runtime validation before paste: `contact` = strict E.164, `web` = strict RFC 3966 URI
+
+**Visibility:**
+- 📋 GOST item shown only for RU locale (`requirements: option-country=RU`, no entitlements)
+
+**Library:**
+- Bundle updated to libphonenumber-js 1.13.13 (latest); `make check-lib` / `make update-lib` keep it fresh
+- Daily freshness check: `.github/workflows/libphonenumber.yml` opens a PR when stale
+
+---
+
 ## Что нового
 
 ### v2.6.0
@@ -18,10 +46,11 @@
 - Runtime-валидация перед вставкой: `contact` — строгий E.164, `web` — строгий RFC 3966 URI
 
 **Видимость:**
-- Пункт «ГОСТ» показывается только при стране RU (`requirements: option-country=RU`, без ентайтлментов)
+- Пункт 📋 ГОСТ показывается только при стране RU (`requirements: option-country=RU`, без ентайтлментов)
 
 **Библиотека:**
 - Бандл обновлён до libphonenumber-js 1.13.13 (latest); `make check-lib` / `make update-lib` следят за свежестью
+- Ежедневная проверка свежести: `.github/workflows/libphonenumber.yml` открывает PR при устаревании
 
 ### v2.5.0
 
@@ -39,13 +68,13 @@
 
 ---
 
-## Установка
+## Installation / Установка
 
-1. Скачайте `phone-formatter.popclipextz`
-2. Дважды кликните по файлу
-3. Настройте страну по умолчанию в параметрах расширения
+1. Download / Скачайте `phone-formatter.popclipextz`
+2. Double-click to install / Дважды кликните для установки
+3. Set your default country in extension settings / Настройте страну по умолчанию в параметрах расширения
 
-## Поддержка
+## Support / Поддержка
 
-- [Сообщить об ошибке](https://github.com/nikolalek/PopClip-Extensions-Phone-Formatter/issues)
-- [Документация](https://github.com/nikolalek/PopClip-Extensions-Phone-Formatter#readme)
+- [Report an issue / Сообщить об ошибке](https://github.com/nikolalek/PopClip-Extensions-Phone-Formatter/issues)
+- [Documentation / Документация](https://github.com/nikolalek/PopClip-Extensions-Phone-Formatter#readme)
