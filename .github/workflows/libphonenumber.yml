@@ -17,8 +17,8 @@ jobs:
   lib:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
 
@@ -39,10 +39,14 @@ jobs:
         run: |
           VER="${{ steps.check.outputs.latest }}"
           BR="auto/libphonenumber-$VER"
+          if [ -n "$(gh pr list --state open --head "$BR" --json number -q '.[].number')" ]; then
+            echo "PR for $BR is already open, nothing to do"
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BR"
           git add phone-formatter.popclipext/libphonenumber-max.js
           git commit -m "chore: update libphonenumber-max.js to $VER"
-          git push -u origin "$BR"
+          git push --force -u origin "$BR"
           gh pr create --title "chore: libphonenumber-max.js $VER" --body "Automated rebuild of the bundled max library (npm \`libphonenumber-js@$VER\` via esbuild). \`make test\` passed during rebuild — see workflow log."
