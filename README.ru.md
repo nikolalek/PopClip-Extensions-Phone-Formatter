@@ -1,7 +1,7 @@
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/lang-English-blue?style=flat-square"></a>
   <img src="https://img.shields.io/badge/PopClip-4200+-blue?style=flat-square&logo=apple">
-  <img src="https://img.shields.io/badge/version-2.6.0-green?style=flat-square">
+  <img src="https://img.shields.io/badge/version-2.6.1-green?style=flat-square">
   <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square">
 </p>
 
@@ -193,8 +193,12 @@
 
 ## История изменений
 
-### v2.6.0
-- **Новое**: пункт подменю 📋 ГОСТ (ГОСТ Р 7.0.97-2016), виден только для локали RU
+### v2.6.1
+- **Библиотека**: бандл libphonenumber-js 1.13.13 → 1.13.15
+- **Инструменты**: `make typecheck` / `make harness`, релиз гейтится типами и тестами, в zip не попадают `*.d.ts`
+- **CI**: workflow проверки свежести библиотеки идемпотентен, actions v7
+
+### v2.6.0- **Новое**: пункт подменю 📋 ГОСТ (ГОСТ Р 7.0.97-2016), виден только для локали RU
 - **Новое**: проверка вывода перед вставкой — строгий E.164 / RFC 3966
 - **Новое**: тесты в репозитории (`make test`, `test/phonefmt.test.js`) — 3717 рандомизированных проверок, 100%
 - Исправлено: терялись добавочные через пробел (`Durchwahl 123`, `poste 123`, `ext 123` в кавычках)

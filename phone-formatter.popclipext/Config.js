@@ -97,7 +97,7 @@
 
 const libPhone = (() => {
     try {
-        const lib = require("./libphonenumber-max.js");
+        const lib = /** @type {any} */ (require("./libphonenumber-max.js"));
         return lib?.parsePhoneNumber ? lib :
                lib?.libphonenumber?.parsePhoneNumber ? lib.libphonenumber :
                lib?.default?.parsePhoneNumber ? lib.default :

@@ -21,7 +21,6 @@ NAME     := phone-formatter
 EXT      := $(NAME).popclipext
 ZIP      := $(NAME).popclipextz
 CONFIG   := $(EXT)/Config.js
-IDENT    := com.nikolalek.$(NAME)
 
 # Версия из аргумента или из файла
 V        ?= $(shell cat VERSION 2>/dev/null || echo "2.5.0")
@@ -32,10 +31,10 @@ YELLOW   := \033[33m
 RED      := \033[31m
 RESET    := \033[0m
 
-.PHONY: all clean zip release check version list rollback test check-lib update-lib
+.PHONY: all clean zip release check version list rollback test check-lib update-lib typecheck harness
 
 # === Основная цель ===
-release: check-clean check-version zip git-tag gh-release
+release: check-clean check-version typecheck test zip git-tag gh-release
 	@echo ""
 	@echo "$(GREEN)✓ Релиз $(TAG) создан$(RESET)"
 	@echo "  https://github.com/nikolalek/PopClip-Extensions-Phone-Formatter/releases/tag/$(TAG)"
@@ -59,10 +58,6 @@ check-version:
 version:
 	@echo "$(V)" > VERSION
 	@echo "$(GREEN)Версия: $(V)$(RESET)"
-# Обновить версию в Config.js если есть поле version
-	@if [ -f "$(CONFIG)" ]; then \
-		perl -i -pe 's/("version"\s*:\s*)"[\d.]+"/$$1"$(V)"/gi' $(CONFIG) 2>/dev/null || true; \
-	fi
 
 # === Сборка ===
 clean:
@@ -71,7 +66,7 @@ clean:
 
 zip: $(EXT)
 	@rm -f $(ZIP)
-	@zip -qr $(ZIP) $(EXT)/
+	@zip -qr $(ZIP) $(EXT)/ -x '*.d.ts'
 	@SIZE=$$(du -h $(ZIP) | cut -f1); \
 	echo "$(GREEN)✓$(RESET) Создано: $(ZIP) ($$SIZE)"
 
@@ -93,6 +88,16 @@ gh-release: $(ZIP)
 		--title "$(NAME) $(TAG)" \
 		$$NOTES \
 		$(ZIP)
+
+# === Среда разработки (popclip.app/dev/js-environment) ===
+# TypeScript в PopClip встроен (sucrase, сборка не нужна); здесь только проверка
+# типов через @popclip/types и официальный CLI-харнесс PopClip.
+typecheck:
+	@test -x node_modules/.bin/tsc || (echo "$(RED)✗ выполните: npm install$(RESET)"; exit 1)
+	@npx tsc --noEmit && echo "$(GREEN)✓$(RESET) Типы OK"
+
+harness:
+	@/Applications/PopClip.app/Contents/MacOS/PopClip run $(CONFIG) && echo "$(GREEN)✓$(RESET) PopClip загрузил модуль (JavaScriptCore)"
 
 # === Тесты ===
 test:
@@ -124,7 +129,7 @@ update-lib:
 		curl -sL "https://registry.npmjs.org/$(LIBPKG)/-/$(LIBPKG)-$(LIBLATEST).tgz" -o "$$TMP/pkg.tgz" && \
 		tar -xzf "$$TMP/pkg.tgz" -C "$$TMP" && \
 		npx -y esbuild "$$TMP/package/$(LIBBUILD)" --bundle --platform=node --format=cjs --minify \
-			--banner:js="// $(LIBPKG)@$(LIBLATEST) max bundle (CJS, offline)" --outfile="$(LIBFILE)" && \
+			--banner:js="// @ts-nocheck $(LIBPKG)@$(LIBLATEST) max bundle (CJS, offline)" --outfile="$(LIBFILE)" && \
 		rm -rf "$$TMP" && \
 		$(MAKE) test; \
 	fi
@@ -167,6 +172,8 @@ help:
 	@echo "  make version V=2.6  - обновить версию в файлах"
 	@echo "  make zip            - собрать .popclipextz"
 	@echo "  make test           - синтаксис + тесты форматирования"
+	@echo "  make typecheck      - типы (@popclip/types + tsc)"
+	@echo "  make harness        - загрузка Config.js в среде PopClip (JSC)"
 	@echo "  make check-lib      - встроенная vs последняя версия libphonenumber"
 	@echo "  make update-lib     - скачать и пересобрать бандл при необходимости"
 	@echo "  make check          - проверить состояние"

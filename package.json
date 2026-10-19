@@ -1,0 +1,12 @@
+{
+  "name": "popclip-phone-formatter-dev",
+  "private": true,
+  "description": "Dev-only tooling for the Phone Formatter extension. PopClip transpiles TS natively (sucrase); nothing here ships in the extension.",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@popclip/types": "^2.6208.0",
+    "typescript": "^7.0.2"
+  }
+}

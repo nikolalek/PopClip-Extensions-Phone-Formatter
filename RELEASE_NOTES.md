@@ -1,5 +1,18 @@
 ## What's New
 
+### v2.6.1
+
+**Library:**
+- Bundled libphonenumber-js updated 1.13.13 → 1.13.15
+- Bundle banner carries `@ts-nocheck`, so `make typecheck` skips generated code
+
+**Tooling:**
+- `make typecheck` (TypeScript + `@popclip/types`) and `make harness` (PopClip JavaScriptCore load check); release now gates on typecheck and tests
+- Dev-only `package.json` / `tsconfig.json`; release zip excludes `*.d.ts`
+- Daily lib check workflow: idempotent PR step (skips when a PR is already open, force-updates the bot branch), actions bumped to v7
+
+No formatting behaviour changes.
+
 ### v2.6.0
 
 **Fixes:**
@@ -27,6 +40,19 @@
 ---
 
 ## Что нового
+
+### v2.6.1
+
+**Библиотека:**
+- Бандл libphonenumber-js обновлён 1.13.13 → 1.13.15
+- В баннер бандла добавлен `@ts-nocheck`, чтобы `make typecheck` не проверял сгенерированный код
+
+**Инструменты:**
+- `make typecheck` (TypeScript + `@popclip/types`) и `make harness` (загрузка в JavaScriptCore PopClip); релиз теперь гейтится типами и тестами
+- Dev-файлы `package.json` / `tsconfig.json`; в zip не попадают `*.d.ts`
+- Ежедневная проверка библиотеки: идемпотентный шаг PR (пропуск при открытом PR, force-обновление ветки бота), actions обновлены до v7
+
+Поведение форматирования не изменилось.
 
 ### v2.6.0
 

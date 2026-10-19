@@ -1,7 +1,7 @@
 <p align="center">
   <a href="README.ru.md"><img src="https://img.shields.io/badge/lang-Русский-red?style=flat-square"></a>
   <img src="https://img.shields.io/badge/PopClip-4200+-blue?style=flat-square&logo=apple">
-  <img src="https://img.shields.io/badge/version-2.6.0-green?style=flat-square">
+  <img src="https://img.shields.io/badge/version-2.6.1-green?style=flat-square">
   <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square">
 </p>
 
@@ -193,8 +193,12 @@ Found a bug? Please [open an issue](https://github.com/nikolalek/PopClip-Extensi
 
 ## Changelog
 
-### v2.6.0
-- **New**: 📋 GOST submenu item (GOST R 7.0.97-2016), visible only for RU locale
+### v2.6.1
+- **Library**: bundled libphonenumber-js 1.13.13 → 1.13.15
+- **Tooling**: `make typecheck` / `make harness`, release gates on typecheck + tests, zip excludes `*.d.ts`
+- **CI**: lib freshness workflow is idempotent, actions v7
+
+### v2.6.0- **New**: 📋 GOST submenu item (GOST R 7.0.97-2016), visible only for RU locale
 - **New**: runtime output guard — strict E.164 / RFC 3966 check before paste
 - **New**: repo test suite (`make test`, `test/phonefmt.test.js`) — 3717 randomized checks, 100%
 - Fixed: space-separated extensions dropped (`Durchwahl 123`, `poste 123`, quoted `ext 123`)
