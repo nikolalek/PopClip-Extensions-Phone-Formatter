@@ -2,14 +2,20 @@
 // Randomized conformance test for phone-formatter.popclipext/Config.js
 // Usage: node test/phonefmt.test.js [SEED=0x...]
 // Asserts E.164 (contact), E.123 (document), GOST, RFC 3966 (web)
-// against libphonenumber-max across 50 countries and dirty formats.
+// against libphonenumber-max across the 42 offered countries and dirty formats.
 const path = require('path');
 const DIR = path.join(__dirname, '..', 'phone-formatter.popclipext');
 global.popclip = { modifiers: {}, showSuccess: () => {} };
 const ext = require(path.join(DIR, 'Config.js'));
 const lib = require(path.join(DIR, 'libphonenumber-max.js'));
 
-const [contactA, documentA, gostA, webA] = ext.actions[0].submenu;
+const ALL_FORMATS = { country: 'RU', docFormat: 'intl', showContact: true, showDocument: true, showWeb: true };
+const submenuOf = (options, text = '74951234567') => {
+    const result = ext.actions({ text }, options);
+    if (!result) return [];
+    return Array.isArray(result) ? result[0].submenu : [result];
+};
+const [contactA, documentA, gostA, webA] = submenuOf(ALL_FORMATS);
 const run = (action, text, country, docFormat = 'intl') =>
     action.code({ text }, { country, docFormat });
 
@@ -19,7 +25,7 @@ const rnd = () => (seed |= 0, seed = seed + 0x6D2B79F5 | 0, (Math.imul(seed ^ se
 const rint = (n) => Math.floor(rnd() * n);
 const rdigits = (len, firstNZ = true) => Array.from({ length: len }, (_, i) => i === 0 && firstNZ ? 1 + rint(9) : rint(10)).join('');
 
-// Country table mirrored from Config.js COUNTRY (+KZ handled as RU-zone)
+// Country table mirrored from the country option values in Config.js
 const COUNTRIES = {
     RU: { lens: [10], code: '7', trunk: '8' }, US: { lens: [10], code: '1' },
     CA: { lens: [10], code: '1' }, DE: { lens: [10, 11], code: '49', trunk: '0' },
@@ -42,11 +48,6 @@ const COUNTRIES = {
     AU: { lens: [9], code: '61', trunk: '0' }, BR: { lens: [10, 11], code: '55', trunk: '0' },
     MX: { lens: [10], code: '52', trunk: '01' }, KR: { lens: [9, 10], code: '82', trunk: '0' },
     IN: { lens: [10], code: '91', trunk: '0' }, TH: { lens: [9], code: '66', trunk: '0' },
-    VN: { lens: [9, 10], code: '84', trunk: '0' }, UA: { lens: [9], code: '380', trunk: '0' },
-    KZ: { lens: [10], code: '7' }, BY: { lens: [9], code: '375', trunk: '8' },
-    IL: { lens: [9], code: '972', trunk: '0' }, AE: { lens: [9], code: '971', trunk: '0' },
-    SA: { lens: [9], code: '966', trunk: '0' }, SG: { lens: [8], code: '65' },
-    NZ: { lens: [9], code: '64', trunk: '0' }, ZA: { lens: [9], code: '27', trunk: '0' },
 };
 
 const libE164 = (e164orLocal, country) => {
@@ -143,6 +144,8 @@ const edge = [
     ['GB', '+442071234567', '+442071234567'],
     ['IT', '0039061234567', null],
     ['JP', '+81312345678', '+81312345678'],
+    ['FR', '+33 1 23 45 67 89 poste 12345', '+33123456789,12345'],
+    ['DE', '+49 30 12345678 ext. 123456', '+493012345678,123456'],
 ];
 for (const [country, input, want] of edge) {
     const c = run(contactA, input, country);
@@ -150,17 +153,21 @@ for (const [country, input, want] of edge) {
     else ok(typeof c === 'string' && (E164RE.test(c.replace(/,\d+$/, '')) || c === input.trim()), `edge ${country}`, `in=${input} got=${c}`);
 }
 
-// GOST submenu item must be gated to RU locale via requirements
+// Dynamic actions: format checkboxes filter the menu; a single format flattens to a top-level action
 {
-    const items = ext.actions[0].submenu;
-    const gost = items[2];
-    ok(Array.isArray(gost.requirements) && gost.requirements.includes('option-country=RU'),
-        'gost visibility', `requirements=${JSON.stringify(gost.requirements)}`);
-    for (const [i, a] of items.entries()) {
-        if (i === 2) continue;
-        ok(!a.requirements || !a.requirements.some(r => String(r).startsWith('option-')),
-            `action[${i}] ungated`, `requirements=${JSON.stringify(a.requirements)}`);
-    }
+    const count = (options) => submenuOf({ ...ALL_FORMATS, ...options }).length;
+    ok(count({}) === 4, 'all formats shown', `count=${count({})}`);
+    ok(count({ showWeb: false }) === 3, 'web hidden', `count=${count({ showWeb: false })}`);
+    ok(count({ country: 'US' }) === 3, 'gost hidden outside RU', `count=${count({ country: 'US' })}`);
+    ok(count({ country: 'US', showWeb: false, showDocument: false, showContact: false }) === 0,
+        'all disabled outside RU -> no actions', '');
+    ok(count({ showWeb: false, showDocument: false, showContact: false }) === 1,
+        'all disabled in RU -> gost stays', '');
+    const single = ext.actions({ text: '74951234567' },
+        { ...ALL_FORMATS, country: 'US', showContact: false, showDocument: false });
+    ok(!Array.isArray(single) && !!single.title && !single.submenu && typeof single.code === 'function',
+        'single format flattens', JSON.stringify(Object.keys(single || {})));
+    ok(!ext.actions({ text: 'hello world' }, ALL_FORMATS), 'non-phone text -> no actions', '');
 }
 
 console.log(`\nPASS: ${pass}  FAIL: ${fail}`);
