@@ -30,7 +30,7 @@ jobs:
 
       - name: Rebuild bundle if stale
         if: steps.check.outputs.bundled != steps.check.outputs.latest
-        run: make update-lib
+        run: npm ci && make update-lib && make zip
 
       - name: Open update PR
         if: steps.check.outputs.bundled != steps.check.outputs.latest
@@ -46,7 +46,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BR"
-          git add phone-formatter.popclipext/libphonenumber-max.js
+          git add phone-formatter.popclipext/libphonenumber-max.js phone-formatter.popclipextz
           git commit -m "chore: update libphonenumber-max.js to $VER"
           git push --force -u origin "$BR"
-          gh pr create --title "chore: libphonenumber-max.js $VER" --body "Automated rebuild of the bundled max library (npm \`libphonenumber-js@$VER\` via esbuild). \`make test\` passed during rebuild — see workflow log."
+          gh pr create --title "chore: libphonenumber-max.js $VER" --body "Automated rebuild of the bundled max library (npm \`libphonenumber-js@$VER\` via esbuild) and of the release zip. \`make test\` passed during rebuild — see workflow log."

@@ -21,6 +21,7 @@ NAME     := phone-formatter
 EXT      := $(NAME).popclipext
 ZIP      := $(NAME).popclipextz
 CONFIG   := $(EXT)/Config.js
+POPCLIP  ?= /Applications/PopClip.app/Contents/MacOS/PopClip
 
 # Версия из аргумента или из файла
 V        ?= $(shell cat VERSION 2>/dev/null || echo "2.5.0")
@@ -97,16 +98,20 @@ typecheck:
 	@npx tsc --noEmit && echo "$(GREEN)✓$(RESET) Типы OK"
 
 harness:
-	@/Applications/PopClip.app/Contents/MacOS/PopClip run $(CONFIG) && echo "$(GREEN)✓$(RESET) PopClip загрузил модуль (JavaScriptCore)"
+	@$(POPCLIP) run $(CONFIG) && echo "$(GREEN)✓$(RESET) PopClip загрузил модуль (JavaScriptCore)"
 
 # === Тесты ===
 test:
 	@node --check $(CONFIG) && echo "$(GREEN)✓$(RESET) Синтаксис Config.js"
 	@node test/phonefmt.test.js
 	@SEED=0x123456 node test/phonefmt.test.js
+	@node test/no-lib.test.js
 
 # === Библиотека libphonenumber ===
-# Бандл собирается из npm-пакета libphonenumber-js (ветка max, CJS, offline).
+# Бандл собирается из npm-пакета libphonenumber-js (ветка max, IIFE, offline).
+# IIFE + footer: sandbox PopClip делает `exports` доступным только для чтения,
+# поэтому CJS-бандл там не загружается. Footer кладёт библиотеку в globalThis
+# и в module.exports — обычный `require(...)` возвращает её напрямую.
 # Версия зашита баннером в начало libphonenumber-max.js — по нему check-lib
 # понимает, что встроено. Файлы без баннера (старые) всегда считаются устаревшими.
 LIBFILE  := $(EXT)/libphonenumber-max.js
@@ -121,15 +126,18 @@ check-lib:
 
 update-lib:
 	@if [ -z "$(LIBLATEST)" ]; then echo "$(RED)✗ Реестр npm недоступен$(RESET)"; exit 1; fi
-	@if [ -n "$(LIBVER)" ] && [ "$(LIBVER)" = "$(LIBLATEST)" ]; then \
+	@if [ -n "$(LIBVER)" ] && [ "$(LIBVER)" = "$(LIBLATEST)" ] && [ -z "$(FORCE)" ]; then \
 		echo "$(GREEN)✓$(RESET) Актуальна ($(LIBVER))"; \
 	else \
 		echo "Обновляю $(LIBVER) → $(LIBLATEST)..."; \
-		TMP=$$(mktemp -d) && \
-		curl -sL "https://registry.npmjs.org/$(LIBPKG)/-/$(LIBPKG)-$(LIBLATEST).tgz" -o "$$TMP/pkg.tgz" && \
-		tar -xzf "$$TMP/pkg.tgz" -C "$$TMP" && \
-		npx -y esbuild "$$TMP/package/$(LIBBUILD)" --bundle --platform=node --format=cjs --minify \
-			--banner:js="// @ts-nocheck $(LIBPKG)@$(LIBLATEST) max bundle (CJS, offline)" --outfile="$(LIBFILE)" && \
+		test -x node_modules/.bin/esbuild || (echo "$(RED)✗ выполните: npm install$(RESET)"; exit 1); \
+		TMP=$$(mktemp -d) && trap 'rm -rf "$$TMP"' EXIT && \
+		(cd "$$TMP" && npm pack "$(LIBPKG)@$(LIBLATEST)" --silent >/dev/null) && \
+		tar -xzf "$$TMP/$(LIBPKG)-$(LIBLATEST).tgz" -C "$$TMP" && \
+		node_modules/.bin/esbuild "$$TMP/package/$(LIBBUILD)" --bundle --platform=node --format=iife --minify \
+			--global-name=libphonenumber \
+			--banner:js="// @ts-nocheck $(LIBPKG)@$(LIBLATEST) max bundle (IIFE, offline)" \
+			--footer:js="globalThis.libphonenumber = libphonenumber; if (typeof module === 'object') module.exports = libphonenumber;" --outfile="$(LIBFILE)" && \
 		rm -rf "$$TMP" && \
 		$(MAKE) test; \
 	fi
