@@ -1,7 +1,7 @@
 <p align="center">
   <a href="README.ru.md"><img src="https://img.shields.io/badge/lang-Русский-red?style=flat-square"></a>
   <img src="https://img.shields.io/badge/PopClip-4200+-blue?style=flat-square&logo=apple">
-  <img src="https://img.shields.io/badge/version-2.6.1-green?style=flat-square">
+  <img src="https://img.shields.io/badge/version-2.6.2-green?style=flat-square">
   <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square">
 </p>
 
@@ -22,7 +22,7 @@
 |--------|--------|----------|
 | 📱 **Contacts** | `+19175551234,123` | Address books, CRM (E.164) |
 | 📄 **Documents** | `+1 917 555 1234 ext. 123` | Emails, documents (E.123) |
-| 📋 **GOST** | `+7 (900) 123-45-67, доб. 123` | RU documents (GOST R 7.0.97-2016, RU locale only) |
+| 📋 **GOST** | `+7 (900) 123-45-67, доб. 123` | RU documents (GOST R 7.0.97-2016, RU country only) |
 | 🌐 **Web** | `tel:+19175551234;ext=123` | Clickable links (RFC 3966) |
 
 **Key capabilities:**
@@ -32,6 +32,7 @@
 - ✅ Validated against bundled `libphonenumber-max.js` (offline-first)
 - ✅ Runtime output guard: strict E.164 / RFC 3966 check before paste
 - ✅ Modifier key: hold **Option (⌥)** on **Documents** to invert format (intl ↔ natl)
+- ✅ Format toggles in Settings: enable only the items you need (E.164, E.123, Web); a single enabled format skips the submenu. GOST is always on for RU
 - ✅ Full manual fallback when the library rejects input
 
 ## Screenshots
@@ -55,7 +56,8 @@
 
 **Advanced:**
 - Hold **Option (⌥)** when clicking **Documents** to invert format (intl ↔ natl)
-- **GOST** appears only when the country option is RU
+- **GOST** is always included when the country option is RU, and never for other countries
+- Formats are toggled in Settings; with a single format enabled it appears without the submenu
 
 ### Supported Input Formats
 
@@ -160,7 +162,7 @@ Input → Clean & Parse Extension → libphonenumber-max (bundled, offline)
 3. If parsed but `isValid() = false` → retry with default country, else manual fallback
 4. Format according to output type; strict regex guard for `contact`/`web`
 
-**Tests:** `make test` runs `test/phonefmt.test.js` — randomized conformance across 50 countries (E.164 vs library, E.123/GOST non-empty, RFC 3966 shape).
+**Tests:** `make test` runs `test/phonefmt.test.js` — randomized conformance across the 42 offered countries (E.164 vs library, E.123/GOST non-empty, RFC 3966 shape).
 
 </details>
 
@@ -193,12 +195,20 @@ Found a bug? Please [open an issue](https://github.com/nikolalek/PopClip-Extensi
 
 ## Changelog
 
+### v2.6.2
+- **Fixed**: bundled libphonenumber now actually loads in PopClip (IIFE + `module.exports`); before, the CJS bundle failed on frozen exports and silently used manual formatting
+- **Fixed**: 5–6 digit extensions are no longer dropped (e.g. FR `poste 12345`, DE `ext. 123456`)
+- **Changed**: GOST checkbox removed — GOST now shows automatically for RU, since PopClip cannot hide options conditionally
+- **New**: settings and submenu labels for all 16 languages
+- **Tooling**: tests run on every push/PR; lib updates rebuild the zip; esbuild pinned and tarball integrity checked; manual-fallback test added
+
 ### v2.6.1
 - **Library**: bundled libphonenumber-js 1.13.13 → 1.13.15
 - **Tooling**: `make typecheck` / `make harness`, release gates on typecheck + tests, zip excludes `*.d.ts`
 - **CI**: lib freshness workflow is idempotent, actions v7
 
-### v2.6.0- **New**: 📋 GOST submenu item (GOST R 7.0.97-2016), visible only for RU locale
+### v2.6.0
+- **New**: 📋 GOST submenu item (GOST R 7.0.97-2016), visible only for RU country
 - **New**: runtime output guard — strict E.164 / RFC 3966 check before paste
 - **New**: repo test suite (`make test`, `test/phonefmt.test.js`) — 3717 randomized checks, 100%
 - Fixed: space-separated extensions dropped (`Durchwahl 123`, `poste 123`, quoted `ext 123`)

@@ -1,5 +1,21 @@
 ## What's New
 
+### v2.6.2
+
+**Fixes:**
+- Bundled libphonenumber now really loads in PopClip (IIFE + `module.exports`); previously the CJS bundle failed on frozen exports and silently used manual formatting
+- 5–6 digit extensions are no longer dropped (e.g. FR `poste 12345`, DE `ext. 123456`)
+
+**Changes:**
+- GOST checkbox removed: GOST now shows automatically for RU (PopClip cannot hide options conditionally)
+- Settings and submenu labels localized for all 16 languages
+- New submenu icon (`tabler:phone-check`)
+
+**Tooling:**
+- CI runs tests on every push/PR and rebuilds the zip when the library updates
+- esbuild is pinned; the library tarball is integrity-checked via `npm pack`
+- Added a test for the manual fallback (library unavailable)
+
 ### v2.6.1
 
 **Library:**
