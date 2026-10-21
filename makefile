@@ -32,21 +32,21 @@ YELLOW   := \033[33m
 RED      := \033[31m
 RESET    := \033[0m
 
-.PHONY: all clean zip release check version list rollback test check-lib update-lib typecheck harness
+.PHONY: all clean zip verify-zip release check version list rollback test check-lib update-lib typecheck harness
 
 # === Основная цель ===
-release: check-clean check-version typecheck test zip git-tag gh-release
+release: check-clean check-version typecheck test zip verify-zip git-tag gh-release
 	@echo ""
 	@echo "$(GREEN)✓ Релиз $(TAG) создан$(RESET)"
 	@echo "  https://github.com/nikolalek/PopClip-Extensions-Phone-Formatter/releases/tag/$(TAG)"
 
 # === Проверки ===
 check-clean:
-	@git diff --quiet HEAD 2>/dev/null || ( \
+	@if ! git diff --quiet HEAD 2>/dev/null || [ -n "$$(git ls-files --others --exclude-standard)" ]; then \
 		echo "$(YELLOW)⚠ Есть незакоммиченные изменения$(RESET)"; \
 		echo "  Выполните: git add . && git commit -m '...''"; \
-		exit 1 \
-	)
+		exit 1; \
+	fi
 
 check-version:
 	@if git tag -l 2>/dev/null | grep -q "^$(TAG)$$"; then \
@@ -67,9 +67,16 @@ clean:
 
 zip: $(EXT)
 	@rm -f $(ZIP)
-	@zip -qr $(ZIP) $(EXT)/ -x '*.d.ts'
+	@zip -qr $(ZIP) $(CONFIG) $(LIBFILE)
 	@SIZE=$$(du -h $(ZIP) | cut -f1); \
 	echo "$(GREEN)✓$(RESET) Создано: $(ZIP) ($$SIZE)"
+
+verify-zip: $(ZIP)
+	@test "$$(unzip -Z1 $(ZIP) | sort)" = "$$(printf '%s\n' '$(CONFIG)' '$(LIBFILE)' | sort)" || \
+		(echo "$(RED)✗ zip содержит посторонние файлы$(RESET)"; exit 1)
+	@unzip -p $(ZIP) $(CONFIG) | cmp - $(CONFIG)
+	@unzip -p $(ZIP) $(LIBFILE) | cmp - $(LIBFILE)
+	@echo "$(GREEN)✓$(RESET) zip совпадает с исходниками"
 
 # === Git операции ===
 git-tag:
@@ -81,14 +88,10 @@ git-tag:
 gh-release: $(ZIP)
 	@echo "$(GREEN)Создаю GitHub Release $(TAG)...$(RESET)"
 	@if [ -f RELEASE_NOTES.md ]; then \
-		NOTES="--notes-file=RELEASE_NOTES.md"; \
+		gh release create $(TAG) --title "$(NAME) $(TAG)" --notes-file=RELEASE_NOTES.md $(ZIP); \
 	else \
-		NOTES="--notes='См. CHANGELOG.md'"; \
-	fi; \
-	gh release create $(TAG) \
-		--title "$(NAME) $(TAG)" \
-		$$NOTES \
-		$(ZIP)
+		gh release create $(TAG) --title "$(NAME) $(TAG)" --notes "См. CHANGELOG.md" $(ZIP); \
+	fi
 
 # === Среда разработки (popclip.app/dev/js-environment) ===
 # TypeScript в PopClip встроен (sucrase, сборка не нужна); здесь только проверка
@@ -105,6 +108,7 @@ test:
 	@node --check $(CONFIG) && echo "$(GREEN)✓$(RESET) Синтаксис Config.js"
 	@node test/phonefmt.test.js
 	@SEED=0x123456 node test/phonefmt.test.js
+	@SEED=7 node test/phonefmt.test.js
 	@node test/no-lib.test.js
 
 # === Библиотека libphonenumber ===
@@ -118,7 +122,7 @@ LIBFILE  := $(EXT)/libphonenumber-max.js
 LIBPKG   := libphonenumber-js
 LIBBUILD := max/index.cjs
 LIBVER   = $(shell grep -o '$(LIBPKG)@[0-9][0-9.]*' $(LIBFILE) 2>/dev/null | head -1 | cut -d@ -f2)
-LIBLATEST = $(shell python3 -c "import json,urllib.request; print(json.load(urllib.request.urlopen('https://registry.npmjs.org/$(LIBPKG)/latest', timeout=30))['version'])" 2>/dev/null)
+LIBLATEST ?= $(shell python3 -c "import json,urllib.request; print(json.load(urllib.request.urlopen('https://registry.npmjs.org/$(LIBPKG)/latest', timeout=30))['version'])" 2>/dev/null)
 
 check-lib:
 	@echo "Встроена: $(or $(LIBVER),неизвестно — обновите через make update-lib)"
@@ -132,7 +136,7 @@ update-lib:
 		echo "Обновляю $(LIBVER) → $(LIBLATEST)..."; \
 		test -x node_modules/.bin/esbuild || (echo "$(RED)✗ выполните: npm install$(RESET)"; exit 1); \
 		TMP=$$(mktemp -d) && trap 'rm -rf "$$TMP"' EXIT && \
-		(cd "$$TMP" && npm pack "$(LIBPKG)@$(LIBLATEST)" --silent >/dev/null) && \
+		(cd "$$TMP" && npm pack "$(LIBPKG)@$(LIBLATEST)" --silent --ignore-scripts >/dev/null) && \
 		tar -xzf "$$TMP/$(LIBPKG)-$(LIBLATEST).tgz" -C "$$TMP" && \
 		node_modules/.bin/esbuild "$$TMP/package/$(LIBBUILD)" --bundle --platform=node --format=iife --minify \
 			--global-name=libphonenumber \
@@ -162,15 +166,16 @@ list:
 
 # === Откат последнего релиза ===
 rollback:
-ifndef V
+ifneq ($(origin V),command line)
 	@echo "$(RED)✗ Укажите версию: make rollback V=x.x.x$(RESET)"
 	@exit 1
-endif
+else
 	@echo "$(YELLOW)Удаление релиза $(TAG)...$(RESET)"
 	@gh release delete $(TAG) -y 2>/dev/null || echo "  Релиз не найден"
 	@git tag -d $(TAG) 2>/dev/null || echo "  Тег не найден локально"
 	@git push origin :refs/tags/$(TAG) 2>/dev/null || echo "  Тег не найден удалённо"
 	@echo "$(GREEN)✓ Релиз $(TAG) удалён$(RESET)"
+endif
 
 # === Помощь ===
 help:

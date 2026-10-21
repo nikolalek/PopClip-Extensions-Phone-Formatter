@@ -1,8 +1,8 @@
 name: libphonenumber update check
 
 # Weekly check: compare bundled libphonenumber-max.js against npm latest.
-# If stale -> rebuild via `make update-lib` (runs tests) -> open a PR.
-# Broken bundles never get a PR: `make update-lib` fails when tests fail.
+# If stale -> rebuild in a read-only job, then open a PR from a separate
+# write-enabled job that never executes the upstream package.
 
 on:
   schedule:
@@ -10,34 +10,83 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+
+concurrency:
+  group: libphonenumber-update
+  cancel-in-progress: false
 
 jobs:
-  lib:
+  build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      latest: ${{ steps.check.outputs.latest }}
+      stale: ${{ steps.check.outputs.stale }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '22'
 
       - name: Compare versions
         id: check
         run: |
-          echo "bundled=$(grep -o 'libphonenumber-js@[0-9][0-9.]*' phone-formatter.popclipext/libphonenumber-max.js 2>/dev/null | head -1 | cut -d@ -f2)" >> "$GITHUB_OUTPUT"
-          echo "latest=$(python3 -c "import json,urllib.request; print(json.load(urllib.request.urlopen('https://registry.npmjs.org/libphonenumber-js/latest', timeout=30))['version'])")" >> "$GITHUB_OUTPUT"
+          bundled=$(grep -o 'libphonenumber-js@[0-9][0-9.]*' phone-formatter.popclipext/libphonenumber-max.js 2>/dev/null | head -1 | cut -d@ -f2)
+          latest=$(python3 -c "import json,urllib.request; print(json.load(urllib.request.urlopen('https://registry.npmjs.org/libphonenumber-js/latest', timeout=30))['version'])")
+          case "$latest" in
+            ''|*[!0-9.]*|.*|*.|*..*) echo "unexpected version: $latest" >&2; exit 1 ;;
+          esac
+          echo "bundled=$bundled" >> "$GITHUB_OUTPUT"
+          printf 'latest=%s\n' "$latest" >> "$GITHUB_OUTPUT"
+          if [ "$bundled" != "$latest" ]; then echo "stale=true" >> "$GITHUB_OUTPUT"; else echo "stale=false" >> "$GITHUB_OUTPUT"; fi
 
       - name: Rebuild bundle if stale
-        if: steps.check.outputs.bundled != steps.check.outputs.latest
-        run: npm ci && make update-lib && make zip
+        if: steps.check.outputs.stale == 'true'
+        env:
+          LIBLATEST: ${{ steps.check.outputs.latest }}
+        run: npm ci && make update-lib LIBLATEST="$LIBLATEST" && make zip
+
+      - name: Upload rebuilt files
+        if: steps.check.outputs.stale == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: lib-update
+          path: |
+            phone-formatter.popclipext/libphonenumber-max.js
+            phone-formatter.popclipextz
+          if-no-files-found: error
+
+  open-pr:
+    needs: build
+    if: needs.build.outputs.stale == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: lib-update
+          path: .
+
+      - name: Verify zip matches the reviewed sources
+        run: |
+          test "$(unzip -Z1 phone-formatter.popclipextz | sort)" = "$(printf '%s\n' 'phone-formatter.popclipext/Config.js' 'phone-formatter.popclipext/libphonenumber-max.js' | sort)"
+          unzip -p phone-formatter.popclipextz phone-formatter.popclipext/Config.js | diff -q - phone-formatter.popclipext/Config.js
+          unzip -p phone-formatter.popclipextz phone-formatter.popclipext/libphonenumber-max.js | cmp - phone-formatter.popclipext/libphonenumber-max.js
 
       - name: Open update PR
-        if: steps.check.outputs.bundled != steps.check.outputs.latest
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VER: ${{ needs.build.outputs.latest }}
         run: |
-          VER="${{ steps.check.outputs.latest }}"
           BR="auto/libphonenumber-$VER"
           if [ -n "$(gh pr list --state open --head "$BR" --json number -q '.[].number')" ]; then
             echo "PR for $BR is already open, nothing to do"
