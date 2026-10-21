@@ -1,5 +1,29 @@
 ## What's New
 
+### v2.6.3
+
+**Fixes:**
+- Menu no longer appears for dates, IPv4 addresses, decimals, and thousands-separated numbers; a real phone after a date/IP/`/` is still detected
+- National trunk prefixes handled: `01` MX, `06` HU, `8` LT, `0` DE/AT/IE/FI; RU `77`/`78` forms fixed
+- Manual fallback (bundle unavailable) accepts short valid numbers, keeps numbers that start with the calling code, and splits multiple numbers on `/`
+- 7-digit numbers show the menu again
+- Unknown country values normalize consistently across the menu, formatter, and GOST guard
+- Invalid numbers are rejected instead of passed through when the bundled library is present
+
+**Security:**
+- Fixed ReDoS in extension-keyword parsing on long whitespace runs
+- 4 KB input guard retained
+
+**Tooling:**
+- npm version validated before use in CI
+- Release zip verified byte-for-byte against sources; only two files allowed
+- Library update build remains read-only; artifact checks added before PR
+- `make verify-zip` runs in CI and release
+
+**Tests:**
+- 498 checks × 3 seeds + 25 manual-fallback checks
+- Added regressions for dates/IPs, trunk prefixes, 7-digit numbers, multi-number slash, invalid inputs, and ReDoS
+
 ### v2.6.2
 
 **Fixes:**
@@ -13,7 +37,7 @@
 
 **Tooling:**
 - CI runs tests on every push/PR and rebuilds the zip when the library updates
-- esbuild is pinned; the library tarball is integrity-checked via `npm pack`
+- esbuild is pinned; the updater runs in a read-only CI job and installs the package with `--ignore-scripts`
 - Added a test for the manual fallback (library unavailable)
 
 ### v2.6.1
@@ -56,6 +80,30 @@ No formatting behaviour changes.
 ---
 
 ## Что нового
+
+### v2.6.3
+
+**Исправления:**
+- Меню больше не появляется для дат, IPv4, десятичных дробей и чисел с разделителями тысяч; реальный телефон после даты/IP/`/` определяется
+- Обрабатываются национальные trunk-префиксы: `01` MX, `06` HU, `8` LT, `0` DE/AT/IE/FI; исправлены формы RU `77`/`78`
+- Ручной fallback (бандл недоступен) принимает короткие валидные номера, не путает номера, начинающиеся с кода страны, и разделяет несколько номеров через `/`
+- 7-значные номера снова показывают меню
+- Неизвестная страна нормализуется одинаково в меню, форматере и ГОСТ
+- Невалидные номера отклоняются, а не передаются как есть, когда встроенная библиотека доступна
+
+**Безопасность:**
+- Исправлен ReDoS в разборе добавочных на длинных последовательностях пробелов
+- Лимит ввода 4 КБ сохранён
+
+**Инструменты:**
+- Версия из npm валидируется до использования в CI
+- Релизный zip сверяется с исходниками побайтно; допускаются только два файла
+- Сборка обновления библиотеки остаётся read-only; добавлены проверки артефакта перед PR
+- `make verify-zip` запускается в CI и при релизе
+
+**Тесты:**
+- 498 проверок × 3 сида + 25 проверок ручного fallback
+- Добавлены регрессии на даты/IP, trunk-префиксы, 7-значные номера, несколько номеров через `/`, невалидный ввод и ReDoS
 
 ### v2.6.1
 

@@ -1,7 +1,7 @@
 <p align="center">
   <a href="README.ru.md"><img src="https://img.shields.io/badge/lang-Русский-red?style=flat-square"></a>
   <img src="https://img.shields.io/badge/PopClip-4200+-blue?style=flat-square&logo=apple">
-  <img src="https://img.shields.io/badge/version-2.6.2-green?style=flat-square">
+  <img src="https://img.shields.io/badge/version-2.6.3-green?style=flat-square">
   <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square">
 </p>
 
@@ -88,35 +88,35 @@
 |---------|------|-----------------|-------------|
 | 🇷🇺 Russia | +7 | 10 | 2-6 |
 | 🇺🇸 United States | +1 | 10 | 2-6 |
-| 🇬🇧 United Kingdom | +44 | 10-11 | 2-5 |
-| 🇩🇪 Germany | +49 | 10-11 | 2-5 |
+| 🇬🇧 United Kingdom | +44 | 9-11 | 2-5 |
+| 🇩🇪 Germany | +49 | 8-11 | 2-5 |
 | 🇫🇷 France | +33 | 9 | 2-4 |
-| 🇨🇳 China | +86 | 11 | 2-5 |
-| 🇯🇵 Japan | +81 | 10-11 | 2-4 |
-| 🇰🇷 South Korea | +82 | 9-10 | 2-5 |
-| 🇧🇷 Brazil | +55 | 10-11 | 2-5 |
+| 🇨🇳 China | +86 | 8, 10-11 | 2-5 |
+| 🇯🇵 Japan | +81 | 9-11 | 2-4 |
+| 🇰🇷 South Korea | +82 | 8-10 | 2-5 |
+| 🇧🇷 Brazil | +55 | 8, 10-11 | 2-5 |
 | 🇮🇳 India | +91 | 10 | 2-5 |
 | 🇦🇺 Australia | +61 | 9 | 2-5 |
 | 🇨🇦 Canada | +1 | 10 | 2-6 |
 | 🇲🇽 Mexico | +52 | 10-11 | 2-4 |
 | 🇮🇹 Italy | +39 | 9-11 | 2-4 |
 | 🇪🇸 Spain | +34 | 9 | 2-4 |
-| 🇳🇱 Netherlands | +31 | 9 | 2-4 |
-| 🇵🇱 Poland | +48 | 9 | 2-4 |
+| 🇳🇱 Netherlands | +31 | 8-9 | 2-4 |
+| 🇵🇱 Poland | +48 | 8-9 | 2-4 |
 | 🇹🇷 Turkey | +90 | 10 | 2-4 |
-| 🇹🇭 Thailand | +66 | 9 | 2-4 |
+| 🇹🇭 Thailand | +66 | 8-9 | 2-4 |
 | 🇸🇪 Sweden | +46 | 7-9 | 2-4 |
 | 🇳🇴 Norway | +47 | 8 | 2-4 |
 | 🇩🇰 Denmark | +45 | 8 | 2-4 |
-| 🇫🇮 Finland | +358 | 9 | 2-4 |
-| 🇦🇹 Austria | +43 | 9-13 | 2-4 |
+| 🇫🇮 Finland | +358 | 8-9 | 2-4 |
+| 🇦🇹 Austria | +43 | 8-13 | 2-4 |
 | 🇨🇭 Switzerland | +41 | 9 | 2-4 |
-| 🇧🇪 Belgium | +32 | 9 | 2-4 |
-| 🇮🇪 Ireland | +353 | 9 | 2-4 |
+| 🇧🇪 Belgium | +32 | 8-9 | 2-4 |
+| 🇮🇪 Ireland | +353 | 8-9 | 2-4 |
 | 🇵🇹 Portugal | +351 | 9 | 2-4 |
 | 🇬🇷 Greece | +30 | 10 | 2-4 |
 | 🇨🇿 Czech Republic | +420 | 9 | 2-4 |
-| 🇭🇺 Hungary | +36 | 9 | 2-4 |
+| 🇭🇺 Hungary | +36 | 8-9 | 2-4 |
 | 🇷🇴 Romania | +40 | 9 | 2-4 |
 | 🇧🇬 Bulgaria | +359 | 8-9 | 2-4 |
 | 🇭🇷 Croatia | +385 | 8-9 | 2-4 |
@@ -127,7 +127,7 @@
 | 🇪🇪 Estonia | +372 | 7-8 | 2-4 |
 | 🇨🇾 Cyprus | +357 | 8 | 2-4 |
 | 🇲🇹 Malta | +356 | 8 | 2-4 |
-| 🇱🇺 Luxembourg | +352 | 9 | 2-4 |
+| 🇱🇺 Luxembourg | +352 | 8-9 | 2-4 |
 
 </details>
 
@@ -147,7 +147,7 @@ Input → Clean & Parse Extension → libphonenumber-max (bundled, offline)
                                           ↓
                                      isValid()?
                                      ┌────┴────┐
-                                    YES        NO → try default country → else manual fallback
+                                    YES        NO → reject
                                      ↓
                                Format E.164
                                      ↓
@@ -159,7 +159,7 @@ Input → Clean & Parse Extension → libphonenumber-max (bundled, offline)
 **Validation flow:**
 1. Clean input (remove garbage, fix `+++` → `+`, `00` → `+` with lib check)
 2. Try bundled `libphonenumber` parsing (resolve country from `+CC`, RU/KZ `8`/`7` trunk fix)
-3. If parsed but `isValid() = false` → retry with default country, else manual fallback
+3. If parsed but `isValid() = false` → reject (manual fallback is used only when the bundled library is unavailable)
 4. Format according to output type; strict regex guard for `contact`/`web`
 
 **Tests:** `make test` runs `test/phonefmt.test.js` — randomized conformance across the 42 offered countries (E.164 vs library, E.123/GOST non-empty, RFC 3966 shape).
@@ -195,12 +195,22 @@ Found a bug? Please [open an issue](https://github.com/nikolalek/PopClip-Extensi
 
 ## Changelog
 
+### v2.6.3
+- **Fixed**: menu no longer appears for dates, IPv4 addresses, decimals, and thousands-separated numbers; a real phone after a date/IP/`/` is still detected
+- **Fixed**: national trunk prefixes (`01` MX, `06` HU, `8` LT, `0` DE/AT/IE/FI) and RU `77`/`78` forms
+- **Fixed**: manual fallback (library unavailable) now accepts short valid numbers, keeps numbers starting with the country code, and formats multiple numbers split by `/`
+- **Fixed**: 7-digit numbers open the menu again
+- **Fixed**: unknown country values are normalized consistently for the menu, formatter, and GOST guard
+- **Security**: extension-keyword ReDoS on long whitespace runs; 4 KB input guard retained
+- **Tooling**: npm version validated in CI, release zip verified byte-for-byte against its sources, exact two-file contents, read-only build job
+- **Tests**: 498 checks × 3 seeds + 25 manual-fallback checks, plus date/IP/trunk/ReDoS regressions
+
 ### v2.6.2
 - **Fixed**: bundled libphonenumber now actually loads in PopClip (IIFE + `module.exports`); before, the CJS bundle failed on frozen exports and silently used manual formatting
 - **Fixed**: 5–6 digit extensions are no longer dropped (e.g. FR `poste 12345`, DE `ext. 123456`)
 - **Changed**: GOST checkbox removed — GOST now shows automatically for RU, since PopClip cannot hide options conditionally
 - **New**: settings and submenu labels for all 16 languages
-- **Tooling**: tests run on every push/PR; lib updates rebuild the zip; esbuild pinned and tarball integrity checked; manual-fallback test added
+- **Tooling**: tests run on every push/PR; lib updates rebuild the zip; esbuild pinned; the updater runs in a read-only CI job; manual-fallback test added
 
 ### v2.6.1
 - **Library**: bundled libphonenumber-js 1.13.13 → 1.13.15
