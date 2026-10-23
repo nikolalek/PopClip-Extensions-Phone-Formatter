@@ -22,6 +22,7 @@ EXT      := $(NAME).popclipext
 ZIP      := $(NAME).popclipextz
 CONFIG   := $(EXT)/Config.js
 POPCLIP  ?= /Applications/PopClip.app/Contents/MacOS/PopClip
+INSTALLED := $(HOME)/Library/Application Support/PopClip/Extensions/$(EXT)
 
 # Версия из аргумента или из файла
 V        ?= $(shell cat VERSION 2>/dev/null || echo "2.5.0")
@@ -32,7 +33,7 @@ YELLOW   := \033[33m
 RED      := \033[31m
 RESET    := \033[0m
 
-.PHONY: all clean zip verify-zip release check version list rollback test check-lib update-lib typecheck harness
+.PHONY: all clean zip verify-zip install check-installed release check version list rollback test check-lib update-lib typecheck harness
 
 # === Основная цель ===
 release: check-clean check-version typecheck test zip verify-zip git-tag gh-release
@@ -77,6 +78,20 @@ verify-zip: $(ZIP)
 	@unzip -p $(ZIP) $(CONFIG) | cmp - $(CONFIG)
 	@unzip -p $(ZIP) $(LIBFILE) | cmp - $(LIBFILE)
 	@echo "$(GREEN)✓$(RESET) zip совпадает с исходниками"
+
+# === Локальная установка ===
+install:
+	@mkdir -p "$(INSTALLED)"
+	@cp $(CONFIG) $(LIBFILE) "$(INSTALLED)/"
+	@open -a PopClip
+	@echo "$(GREEN)✓$(RESET) Установлено в $(INSTALLED)"
+
+check-installed:
+	@if [ -d "$(INSTALLED)" ] && cmp -s $(CONFIG) "$(INSTALLED)/Config.js" && cmp -s $(LIBFILE) "$(INSTALLED)/libphonenumber-max.js"; then \
+		echo "$(GREEN)✓$(RESET) Установленная копия совпадает с репозиторием"; \
+	else \
+		echo "$(YELLOW)⚠$(RESET) Установлена устаревшая копия (или расширение не установлено) — выполните: make install"; \
+	fi
 
 # === Git операции ===
 git-tag:
