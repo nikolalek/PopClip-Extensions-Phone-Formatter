@@ -605,14 +605,14 @@ class PhoneParser {
 const ACTION_TITLES = {
     contact: { ru: "📱 Контакты", en: "📱 Contacts", de: "📱 Kontakte", fr: "📱 Contacts", zh: "📱 联系人", ja: "📱 連絡先", it: "📱 Contatti", es: "📱 Contactos", nl: "📱 Contacten", pl: "📱 Kontakty", "pt-br": "📱 Contatos", ko: "📱 연락처", vi: "📱 Danh bạ", tr: "📱 Kişiler", sk: "📱 Kontakty", da: "📱 Kontakter" },
     document: { ru: "📄 Документы", en: "📄 Documents", de: "📄 Dokumente", fr: "📄 Documents", zh: "📄 文档", ja: "📄 文書", it: "📄 Documenti", es: "📄 Documentos", nl: "📄 Documenten", pl: "📄 Dokumenty", "pt-br": "📄 Documentos", ko: "📄 문서", vi: "📄 Tài liệu", tr: "📄 Belgeler", sk: "📄 Dokumenty", da: "📄 Dokumenter" },
-    gost: { ru: "📋 ГОСТ", en: "📋 GOST", de: "📋 GOST", fr: "📋 GOST", zh: "📋 ГОСТ", ja: "📋 GOST", it: "📋 GOST", es: "📋 GOST", nl: "📋 GOST", pl: "📋 GOST", "pt-br": "📋 GOST", ko: "📋 GOST", vi: "📋 GOST", tr: "📋 GOST", sk: "📋 GOST", da: "📋 GOST" },
+    gost: { ru: "🇷🇺 ГОСТ", en: "🇷🇺 GOST", de: "🇷🇺 GOST", fr: "🇷🇺 GOST", zh: "🇷🇺 ГОСТ", ja: "🇷🇺 GOST", it: "🇷🇺 GOST", es: "🇷🇺 GOST", nl: "🇷🇺 GOST", pl: "🇷🇺 GOST", "pt-br": "🇷🇺 GOST", ko: "🇷🇺 GOST", vi: "🇷🇺 GOST", tr: "🇷🇺 GOST", sk: "🇷🇺 GOST", da: "🇷🇺 GOST" },
     web: { ru: "🌐 Веб", en: "🌐 Web", de: "🌐 Web", fr: "🌐 Web", zh: "🌐 网页", ja: "🌐 ウェブ", it: "🌐 Web", es: "🌐 Web", nl: "🌐 Web", pl: "🌐 Sieć", "pt-br": "🌐 Web", ko: "🌐 웹", vi: "🌐 Web", tr: "🌐 Web", sk: "🌐 Web", da: "🌐 Web" }
 };
 
 const ACTION_ICONS = {
     contact: "iconify:tabler:address-book",
     document: "iconify:tabler:file-text",
-    gost: "iconify:tabler:clipboard-check",
+    gost: "iconify:tabler:phone-spark",
     web: "iconify:tabler:world"
 };
 
