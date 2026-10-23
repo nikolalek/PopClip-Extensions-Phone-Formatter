@@ -162,10 +162,10 @@ const libPhone = (() => {
         // @ts-ignore the bundle is a plain IIFE, not a module
         const lib = /** @type {any} */ (require("./libphonenumber-max.js"));
         return lib?.parsePhoneNumber ? lib :
-               lib?.libphonenumber?.parsePhoneNumber ? lib.libphonenumber :
-               lib?.default?.parsePhoneNumber ? lib.default :
-               lib?.default?.libphonenumber?.parsePhoneNumber ? lib.default.libphonenumber :
-               null;
+            lib?.libphonenumber?.parsePhoneNumber ? lib.libphonenumber :
+                lib?.default?.parsePhoneNumber ? lib.default :
+                    lib?.default?.libphonenumber?.parsePhoneNumber ? lib.default.libphonenumber :
+                        null;
     } catch { return null; }
 })();
 
@@ -218,17 +218,17 @@ const VALID_CODES = new Set([
     '+1', '+7', '+20', '+27', '+30', '+31', '+32', '+33', '+34', '+36', '+39', '+40', '+41', '+43',
     '+44', '+45', '+46', '+47', '+48', '+49', '+51', '+52', '+53', '+54', '+55', '+56', '+57', '+58',
     '+60', '+61', '+62', '+63', '+64', '+65', '+66', '+81', '+82', '+84', '+86', '+90', '+91', '+92',
-    '+93', '+94', '+95', '+98', '+212', '+213', '+216', '+218', '+220', '+221', '+222', '+223', '+224',
+    '+93', '+94', '+95', '+98', '+211', '+212', '+213', '+216', '+218', '+220', '+221', '+222', '+223', '+224',
     '+225', '+226', '+227', '+228', '+229', '+230', '+231', '+232', '+233', '+234', '+235', '+236',
-    '+237', '+238', '+239', '+240', '+241', '+242', '+243', '+244', '+245', '+246', '+248', '+249',
+    '+237', '+238', '+239', '+240', '+241', '+242', '+243', '+244', '+245', '+246', '+247', '+248', '+249',
     '+250', '+251', '+252', '+253', '+254', '+255', '+256', '+257', '+258', '+260', '+261', '+262',
     '+263', '+264', '+265', '+266', '+267', '+268', '+269', '+290', '+291', '+297', '+298', '+299',
     '+350', '+351', '+352', '+353', '+354', '+355', '+356', '+357', '+358', '+359', '+370', '+371',
-    '+372', '+373', '+374', '+375', '+376', '+377', '+378', '+379', '+380', '+381', '+382', '+383',
+    '+372', '+373', '+374', '+375', '+376', '+377', '+378', '+380', '+381', '+382', '+383',
     '+385', '+386', '+387', '+389', '+420', '+421', '+423', '+500', '+501', '+502', '+503', '+504',
     '+505', '+506', '+507', '+508', '+509', '+590', '+591', '+592', '+593', '+594', '+595', '+596',
     '+597', '+598', '+599', '+670', '+672', '+673', '+674', '+675', '+676', '+677', '+678', '+679',
-    '+680', '+681', '+682', '+683', '+684', '+685', '+686', '+687', '+688', '+689', '+690', '+691',
+    '+680', '+681', '+682', '+683', '+685', '+686', '+687', '+688', '+689', '+690', '+691',
     '+692', '+850', '+852', '+853', '+855', '+856', '+880', '+886', '+960', '+961', '+962', '+963',
     '+964', '+965', '+966', '+967', '+968', '+970', '+971', '+972', '+973', '+974', '+975', '+976',
     '+977', '+992', '+993', '+994', '+995', '+996', '+998'
@@ -248,16 +248,20 @@ const EXT_LABEL = {
     IN: 'ext.', TH: 'ต่อ'
 };
 
+// Single source of truth for extension keywords (longer words first where one
+// is a prefix of another). Used by EXT_PATTERNS, PHONE_PATTERN, and findAll.
+const EXT_KEYWORDS = String.raw`extension|extn|durchwahl|добавочный|alanumero|vidinis|interno|anknr|poste|内線|分机|mellék|linka|wew\.?|вт\.?|iekš\.?|lisa|ramal|ext\.?|int\.?|tst\.?|lok\.?|dahili|εσωτ\.?|DW|App\.?|lnr|доб\.?|uitb\.?|est\.?`;
+
 const EXT_PATTERNS = [
     /^tel:([+\d\-\(\)\s]+);ext(?:ension)?=(\d+)$/i,
-    /^(.+?)\s*[;,]\s*ext(?:ension)?\s*=\s*(\d+)\)?$/i,
+    /^(.+?)\s*[,;]\s*ext(?:ension)?\s*=\s*(\d+)\)?$/i,
     /(.+?)[,;]\s*(\d+)\)?$/,
-    /(.+?)\s+\(?\s*(?:доб\.?|ext\.?|extension|добавочный|durchwahl|poste|分机|内線|int\.?|tst\.?|anknr|lnr|lok\.?|DW|App\.?|εσωτ\.?|alanumero|linka|mellék|wew\.?|вт\.?|vidinis|iekš\.?|lisa|est\.?|dahili|ramal|내선|ต่อ|uitb\.?|interno|extn)\s*[:=]?\s*(\d+)\)?$/i,
+    new RegExp(String.raw`(.+?)\s+\(?\s*(?:${EXT_KEYWORDS})\s*[:=]?\s*(\d+)\)?$`, 'i'),
     /(.+?)\s*[x#*]\s*(\d+)\)?$/i
 ];
 
 // Date-, IP-, decimal-, and thousands-like strings are not phones.
-const PHONE_PATTERN = String.raw`(?:tel:)?(?:(?:\+?\d|\(\+?\d)[\d\s\-\(\)\.\/]{5,}\d)(?:\s*(?:;ext(?:ension)?=|(?:\s*[,;]\s*|\s+)(?:доб\.?|ext\.?|durchwahl|poste|分机|内線|int\.?|tst\.?|anknr|lnr|lok\.?|DW|App\.?|εσωτ\.?|alanumero|linka|mellék|wew\.?|вт\.?|vidinis|iekš\.?|lisa|est\.?|dahili|ramal|내선|ต่อ|uitb\.?|interno|extn|#|x)\s*[:=]?\s*|\s*[,;]\s*[:=]?\s*|["']?[x#*]\s*)\d{2,6}(?![\d.\/]))?`;
+const PHONE_PATTERN = String.raw`(?:tel:)?(?:(?:\+?\d|\(\+?\d)[\d\s\-\(\)\.\/]{5,}\d)(?:\s*(?:;ext(?:ension)?=|(?:\s*[,;]\s*|\s+)(?:${EXT_KEYWORDS}|#|x)\s*[:=]?\s*|\s*[,;]\s*[:=]?\s*|["']?[x#*]\s*)\d{2,6}(?![\d.\/]))?`;
 const PHONE_REGEX = new RegExp(PHONE_PATTERN, 'i');
 const NON_PHONE_TEXT = /^(?:tel:)?\s*(?:(?:\d{1,4}\.){3}\d{1,4}|(?:\d{1,4}\.){5,}\d{1,4}|\d{1,4}[-.\/]\d{1,2}[-.\/]\d{1,4}|\d{1,3}(?:[.\/]\d{3})+|\+?\d{1,6}[.\/]\d{1,6})$/i;
 const isNonPhoneText = (value) => NON_PHONE_TEXT.test(String(value).replace(/\s+/g, ''));
@@ -351,7 +355,7 @@ class PhoneFormatter {
                 try {
                     const p = libPhone.parsePhoneNumber(plus);
                     if (p?.isValid()) return p.format('E.164');
-                } catch {}
+                } catch { }
             }
             clean = plus;
         }
@@ -391,7 +395,7 @@ class PhoneFormatter {
         try {
             const parsed = libPhone.parsePhoneNumber(clean, clean.startsWith('+') ? undefined : this.#country);
             if (parsed?.isValid()) return parsed.format('E.164');
-        } catch {}
+        } catch { }
         return null;
     }
 
@@ -470,7 +474,7 @@ class PhoneFormatter {
             try {
                 const parsed = libPhone.parsePhoneNumber(e164);
                 if (parsed) return this.#docFormat === 'natl' ? parsed.formatNational() : parsed.formatInternational();
-            } catch {}
+            } catch { }
         }
         return this.#manualFormatDocument(e164);
     }
@@ -485,12 +489,12 @@ class PhoneFormatter {
                     if (country === 'RU') {
                         const num = national.replace(/[^\d]/g, '');
                         if (num.length === 11 && num.startsWith('8')) {
-                            return `+7 (${num.slice(1,4)}) ${num.slice(4,7)}-${num.slice(7,9)}-${num.slice(9)}`;
+                            return `+7 (${num.slice(1, 4)}) ${num.slice(4, 7)}-${num.slice(7, 9)}-${num.slice(9)}`;
                         }
                     }
                     return this.#manualFormatGost(e164);
                 }
-            } catch {}
+            } catch { }
         }
         return this.#manualFormatGost(e164);
     }
@@ -500,13 +504,13 @@ class PhoneFormatter {
         if (!code) return e164;
         const national = e164.slice(code.length);
         if (code === '+7' && national.length === 10) {
-            return `+7 (${national.slice(0,3)}) ${national.slice(3,6)}-${national.slice(6,8)}-${national.slice(8)}`;
+            return `+7 (${national.slice(0, 3)}) ${national.slice(3, 6)}-${national.slice(6, 8)}-${national.slice(8)}`;
         }
         if (code === '+1' && national.length === 10) {
-            return `+1 (${national.slice(0,3)}) ${national.slice(3,6)}-${national.slice(6)}`;
+            return `+1 (${national.slice(0, 3)}) ${national.slice(3, 6)}-${national.slice(6)}`;
         }
         if (code === '+49' && national.length >= 10) {
-            return `+${code.replace('+','')} ${national.slice(0,2)} ${national.slice(2)}`;
+            return `+${code.replace('+', '')} ${national.slice(0, 2)} ${national.slice(2)}`;
         }
         return this.#manualFormatDocument(e164);
     }
@@ -516,12 +520,15 @@ class PhoneFormatter {
         if (!code) return e164;
         const national = e164.slice(code.length);
         if (this.#docFormat === 'natl') {
-            if (code === '+7' && national.length === 10) return `8 (${national.slice(0,3)}) ${national.slice(3,6)}-${national.slice(6,8)}-${national.slice(8)}`;
-            if (code === '+1' && national.length === 10) return `(${national.slice(0,3)}) ${national.slice(3,6)}-${national.slice(6)}`;
-            return national;
+            if (code === '+7' && national.length === 10) return `8 (${national.slice(0, 3)}) ${national.slice(3, 6)}-${national.slice(6, 8)}-${national.slice(8)}`;
+            if (code === '+1' && national.length === 10) return `(${national.slice(0, 3)}) ${national.slice(3, 6)}-${national.slice(6)}`;
+            const entry = Object.values(COUNTRY).find(c => c.code === code);
+            // shortcut: digits are correct but trunk is glued on without area-code
+            // grouping (no subnet tables here); upgrade if no-lib users complain
+            return (entry?.nationalPrefix || '') + national;
         }
-        if (code === '+7' && national.length === 10) return `+7 ${national.slice(0,3)} ${national.slice(3,6)} ${national.slice(6,8)} ${national.slice(8)}`;
-        if (code === '+1' && national.length === 10) return `+1 ${national.slice(0,3)} ${national.slice(3,6)}-${national.slice(6)}`;
+        if (code === '+7' && national.length === 10) return `+7 ${national.slice(0, 3)} ${national.slice(3, 6)} ${national.slice(6, 8)} ${national.slice(8)}`;
+        if (code === '+1' && national.length === 10) return `+1 ${national.slice(0, 3)} ${national.slice(3, 6)}-${national.slice(6)}`;
         return `${code} ${national}`;
     }
 
@@ -566,15 +573,19 @@ class PhoneParser {
         if (libPhone?.findPhoneNumbersInText) {
             try {
                 const found = libPhone.findPhoneNumbersInText(text, defaultCountry);
-                if (found.length) return found.map(item => {
+                // libphonenumber can swallow the next number of a comma/semicolon
+                // list as a bogus extension (>6 digits); rescanning manually handles lists.
+                const bogusExt = found.some(item =>
+                    (String(item.number?.ext || '').match(/\d/g) || []).length > 6);
+                if (found.length && !bogusExt) return found.map(item => {
                     let s = item.startsAt, e = item.endsAt;
                     if (s >= 4 && text.substring(s - 4, s).toLowerCase() === 'tel:') s -= 4;
                     const after = text.substring(e, e + 30);
-                    const extMatch = after.match(/^(?:;ext(?:ension)?=\s*|["']?\s*(?:[,;]\s*[:=]?\s*|\s+)\(?\s*(?:доб\.?|ext\.?|extension|durchwahl|poste|分机|内線|int\.?|tst\.?|anknr|lnr|lok\.?|DW|App\.?|εσωτ\.?|alanumero|linka|mellék|wew\.?|вт\.?|vidinis|iekš\.?|lisa|est\.?|dahili|ramal|내선|ต่อ|uitb\.?|interno|extn|[x#*])\s*[:=]?\s*|["']?\s*[,;]\s*[:=]?\s*|["']?[x#*]\s*)(\d{2,6})\)?/i);
+                    const extMatch = after.match(new RegExp(String.raw`^(?:;ext(?:ension)?=\s*|["']?\s*(?:[,;]\s*[:=]?\s*|\s+)\(?\s*(?:${EXT_KEYWORDS}|[x#*])\s*[:=]?\s*|["']?\s*[,;]\s*[:=]?\s*|["']?[x#*]\s*)(\d{2,6})\)?`, 'i'));
                     if (extMatch) e += extMatch[0].length;
                     return { number: item.number?.number || '', startsAt: s, endsAt: e, ext: item.number?.ext || extMatch?.[1] || null, originalText: text.substring(s, e) };
                 });
-            } catch {}
+            } catch { }
         }
         const results = [];
         const add = (raw, at) => {
@@ -621,7 +632,7 @@ function makeAction(type) {
         title: ACTION_TITLES[type],
         icon: ACTION_ICONS[type],
         regex: PHONE_REGEX,
-        code: function(input, options) {
+        code: function (input, options) {
             if ((input?.text || '').length > MAX_INPUT_LENGTH) return;
             if (type === 'gost' && normalizeCountry(options?.country) !== 'RU') return;
             try {
@@ -633,7 +644,7 @@ function makeAction(type) {
                     if (popclip.showSuccess) popclip.showSuccess();
                     return result;
                 }
-            } catch {}
+            } catch { }
             return undefined;
         }
     };
@@ -674,5 +685,7 @@ function populateActions(input, options) {
 }
 
 module.exports = {
-    actions: populateActions
+    actions: populateActions,
+    // exported for tests only; PopClip only consumes `actions`
+    VALID_CODES
 };

@@ -37,9 +37,12 @@ const forText = (text, country) => ext.actions(
     { country, docFormat: 'intl', showContact: true, showDocument: true, showWeb: true }
 ).reduce((acc, item) => acc.concat(item.submenu || [item]), []);
 const runOn = (text, country, index) => forText(text, country)[index].code({ text }, { country, docFormat: 'intl' });
+const runNatl = (text, country) => forText(text, country)[1].code({ text }, { country, docFormat: 'natl' });
 
 ok(out(ru, 3, '84951234567', 'RU') === 'tel:+74951234567', 'no-lib RU web', '');
 ok(runOn('+44 20 7123 4567', 'GB', 0) === '+442071234567', 'no-lib foreign +', runOn('+44 20 7123 4567', 'GB', 0));
+ok(runOn('+211 912 1234 56', 'RU', 0) === '+211912123456', 'no-lib South Sudan +211',
+    runOn('+211 912 1234 56', 'RU', 0));
 ok(runOn('+44 20 7123 4567', 'GB', 2) === 'tel:+442071234567', 'no-lib foreign web', '');
 ok(runOn('0049 30 12345678', 'DE', 0) === '+493012345678', 'no-lib 00 prefix', runOn('0049 30 12345678', 'DE', 0));
 ok(runOn('0612345678', 'IT', 0) === '+390612345678', 'no-lib keeps IT zero', runOn('0612345678', 'IT', 0));
@@ -60,8 +63,19 @@ ok(runOn('87011234567', 'RU', 0) === '+77011234567', 'no-lib KZ 7 trunk', runOn(
 ok(runOn('774951234567', 'RU', 0) === '+74951234567', 'no-lib RU 77', runOn('774951234567', 'RU', 0));
 ok(runOn('84951234567 / 84957654321', 'RU', 0) === '+74951234567, +74957654321',
     'no-lib multiple slash', runOn('84951234567 / 84957654321', 'RU', 0));
+ok(runOn('84951234567, 84957654321', 'RU', 0) === '+74951234567, +74957654321',
+    'no-lib comma list', runOn('84951234567, 84957654321', 'RU', 0));
+ok(runOn('84951234567;84957654321', 'RU', 0) === '+74951234567, +74957654321',
+    'no-lib semicolon list', runOn('84951234567;84957654321', 'RU', 0));
+ok(runOn('84951234567 добавочный 12', 'RU', 0) === '+74951234567,12',
+    'no-lib добавочный ext', runOn('84951234567 добавочный 12', 'RU', 0));
+ok(runOn('84951234567 extension 12', 'RU', 0) === '+74951234567,12',
+    'no-lib extension ext', runOn('84951234567 extension 12', 'RU', 0));
 ok(runOn('+7 999 123 456', 'RU', 0) === undefined, 'no-lib rejects invalid RU', '');
 ok(runOn('+1234567890123456', 'RU', 0) === undefined, 'no-lib rejects overlong', '');
+ok(runNatl('+49 30 12345678', 'DE') === '03012345678', 'no-lib DE natl trunk', runNatl('+49 30 12345678', 'DE'));
+ok(runNatl('+44 20 7123 4567', 'GB') === '02071234567', 'no-lib GB natl trunk', runNatl('+44 20 7123 4567', 'GB'));
+ok(runNatl('+36 1 234 5678', 'HU') === '0612345678', 'no-lib HU natl 06 trunk', runNatl('+36 1 234 5678', 'HU'));
 
 console.log(`\nPASS: ${pass}  FAIL: ${fail}`);
 process.exit(fail ? 1 : 0);

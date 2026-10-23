@@ -23,6 +23,7 @@ const run = (action, text, country, docFormat = 'intl') =>
 let seed = parseInt(process.env.SEED || '0xC0FFEE', 16);
 const rnd = () => (seed |= 0, seed = seed + 0x6D2B79F5 | 0, (Math.imul(seed ^ seed >>> 15, 1 | seed) ^ (Math.imul(seed ^ seed >>> 7, 61 | seed) >>> 0)) >>> 0) / 4294967296;
 const rint = (n) => Math.floor(rnd() * n);
+
 const rdigits = (len, firstNZ = true) => Array.from({ length: len }, (_, i) => i === 0 && firstNZ ? 1 + rint(9) : rint(10)).join('');
 
 // Country table mirrored from the country option values in Config.js
@@ -111,6 +112,15 @@ const ok = (cond, label, detail) => {
     if (cond) pass++;
     else { fail++; failures.push(`${label} :: ${detail}`); }
 };
+
+// VALID_CODES must stay in sync with the bundled libphonenumber
+{
+    const real = new Set(lib.getCountries().map(c => '+' + lib.getCountryCallingCode(c)));
+    const missing = [...real].filter(c => !ext.VALID_CODES.has(c));
+    const extra = [...ext.VALID_CODES].filter(c => !real.has(c));
+    ok(missing.length === 0 && extra.length === 0, 'VALID_CODES sync',
+        `missing=${missing} extra=${extra}`);
+}
 
 const E164RE = /^\+[1-9]\d{6,14}$/;
 for (const [country, cfg] of Object.entries(COUNTRIES)) {
@@ -222,11 +232,23 @@ ok(run(contactA, '84951234567 ext. 1234567', 'RU') === '+74951234567', '7-digit 
     run(contactA, '84951234567 ext. 1234567', 'RU'));
 ok(run(contactA, '84951234567#12', 'RU') === '+74951234567,12', '# ext', '');
 ok(run(contactA, '84951234567 int. 12', 'RU') === '+74951234567,12', 'int. ext', '');
+ok(run(contactA, '84951234567 добавочный 12', 'RU') === '+74951234567,12', 'добавочный ext',
+    run(contactA, '84951234567 добавочный 12', 'RU'));
+ok(run(contactA, '84951234567 extension 12', 'RU') === '+74951234567,12', 'extension ext',
+    run(contactA, '84951234567 extension 12', 'RU'));
 ok(run(webA, '84951234567 x12', 'RU') === 'tel:+74951234567;ext=12', 'x ext web', '');
 ok(run(contactA, 'Тел: +7 495 123 45 67', 'RU') === '+74951234567', 'Тел: prefix', '');
 ok(run(contactA, '"84951234567 ext. 12"', 'RU') === '+74951234567,12', 'quoted ext', '');
 ok(run(contactA, '84951234567 / 84957654321', 'RU') === '+74951234567, +74957654321',
     'multiple numbers', run(contactA, '84951234567 / 84957654321', 'RU'));
+ok(run(contactA, '84951234567, 84957654321', 'RU') === '+74951234567, +74957654321',
+    'comma list', run(contactA, '84951234567, 84957654321', 'RU'));
+ok(run(contactA, '84951234567;84957654321', 'RU') === '+74951234567, +74957654321',
+    'semicolon list', run(contactA, '84951234567;84957654321', 'RU'));
+ok(run(contactA, '84951234567, 84957654321, 84950000000', 'RU') === '+74951234567, +74957654321, +74950000000',
+    'three-number comma list', run(contactA, '84951234567, 84957654321, 84950000000', 'RU'));
+ok(run(contactA, '84951234567, 12', 'RU') === '+74951234567,12',
+    'short comma ext kept', run(contactA, '84951234567, 12', 'RU'));
 {
     const long = ' '.repeat(200000);
     const started = Date.now();
@@ -264,6 +286,28 @@ ok(run(contactA, '84951234567 / 84957654321', 'RU') === '+74951234567, +74957654
     ok(!Array.isArray(single) && !!single.title && !single.submenu && typeof single.code === 'function',
         'single format flattens', JSON.stringify(Object.keys(single || {})));
     ok(!ext.actions({ text: 'hello world' }, ALL_FORMATS), 'non-phone text -> no actions', '');
+}
+
+// Guarded paths that mutation testing showed untested
+{
+    // Option key inverts the document format at click time
+    global.popclip.modifiers = { option: true };
+    const natlViaOption = documentA.code({ text: '84951234567' }, { country: 'RU', docFormat: 'intl' });
+    ok(natlViaOption === '8 (495) 123-45-67', 'option key flips intl to natl', natlViaOption);
+    const intlViaOption = documentA.code({ text: '84951234567' }, { country: 'RU', docFormat: 'natl' });
+    ok(intlViaOption === '+7 495 123 45 67', 'option key flips natl to intl', intlViaOption);
+    global.popclip.modifiers = {};
+
+    // Per-action MAX_INPUT_LENGTH guard (menu gate alone is not enough)
+    ok(contactA.code({ text: '9'.repeat(5000) }, ALL_FORMATS) === undefined, 'action-level length guard', '');
+
+    // Multi-line: one number per line; non-phone lines pass through; empty lines kept
+    ok(run(contactA, '84951234567\n84957654321', 'RU') === '+74951234567\n+74957654321',
+        'multi-line phones', run(contactA, '84951234567\n84957654321', 'RU'));
+    ok(run(contactA, '84951234567\nnote to self', 'RU') === '+74951234567\nnote to self',
+        'multi-line passthrough', run(contactA, '84951234567\nnote to self', 'RU'));
+    ok(run(contactA, '84951234567\n\n84957654321', 'RU') === '+74951234567\n\n+74957654321',
+        'multi-line empty line kept', JSON.stringify(run(contactA, '84951234567\n\n84957654321', 'RU')));
 }
 
 console.log(`\nPASS: ${pass}  FAIL: ${fail}`);
