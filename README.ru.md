@@ -1,7 +1,7 @@
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/lang-English-blue?style=flat-square"></a>
   <img src="https://img.shields.io/badge/PopClip-4200+-blue?style=flat-square&logo=apple">
-  <img src="https://img.shields.io/badge/version-2.6.3-green?style=flat-square">
+  <img src="https://img.shields.io/badge/version-2.6.4-green?style=flat-square">
   <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square">
 </p>
 
@@ -194,6 +194,15 @@
 - Версия PopClip
 
 ## История изменений
+
+### v2.6.4
+- **Исправлено**: списки номеров через `,`/`;` больше не теряют все номера после первого (libphonenumber принимал следующий номер за добавочный)
+- **Исправлено**: ключевые слова добавочных собраны в один источник — `добавочный` и `extension` больше не теряются
+- **Исправлено**: национальный формат ручного fallback сохраняет trunk-префикс (например, DE `03012345678`)
+- **Исправлено**: `VALID_CODES` синхронизирован с libphonenumber (добавлены `+211`, `+247`; убраны фантомы)
+- **Изменено**: иконка пункта ГОСТ `tabler:phone-spark`, подпись 🇷🇺
+- **Инструменты**: `make install` / `make check-installed` для синхронизации локальной установки; `npm ci --ignore-scripts` в CI
+- **Тесты**: 511 проверок × 3 сида + 33 проверки fallback; Option-инверсия, guard длины, многострочный ввод, синхронизация VALID_CODES
 
 ### v2.6.3
 - **Исправлено**: меню больше не появляется для дат, IPv4, десятичных дробей и чисел с разделителями тысяч; телефон после даты/IP/`/` по-прежнему определяется

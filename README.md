@@ -1,7 +1,7 @@
 <p align="center">
   <a href="README.ru.md"><img src="https://img.shields.io/badge/lang-Русский-red?style=flat-square"></a>
   <img src="https://img.shields.io/badge/PopClip-4200+-blue?style=flat-square&logo=apple">
-  <img src="https://img.shields.io/badge/version-2.6.3-green?style=flat-square">
+  <img src="https://img.shields.io/badge/version-2.6.4-green?style=flat-square">
   <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square">
 </p>
 
@@ -194,6 +194,15 @@ Found a bug? Please [open an issue](https://github.com/nikolalek/PopClip-Extensi
 - PopClip version
 
 ## Changelog
+
+### v2.6.4
+- **Fixed**: comma/semicolon-separated phone lists no longer drop every number after the first (libphonenumber mistook the next number for an extension)
+- **Fixed**: extension keywords unified into one source list — `добавочный` and `extension` no longer lost in some paths
+- **Fixed**: manual fallback (library unavailable) national format keeps the trunk prefix (e.g. DE `03012345678`)
+- **Fixed**: `VALID_CODES` back in sync with libphonenumber (`+211` South Sudan, `+247` Ascension added; phantoms removed)
+- **Changed**: GOST item icon `tabler:phone-spark`, label 🇷🇺
+- **Tooling**: `make install` / `make check-installed` to keep the locally installed copy in sync; `npm ci --ignore-scripts` in CI
+- **Tests**: 511 checks × 3 seeds + 33 fallback checks; Option-key flip, action-level input guard, multi-line behavior, VALID_CODES sync
 
 ### v2.6.3
 - **Fixed**: menu no longer appears for dates, IPv4 addresses, decimals, and thousands-separated numbers; a real phone after a date/IP/`/` is still detected

@@ -1,5 +1,24 @@
 ## What's New
 
+### v2.6.4
+
+**Fixes:**
+- Comma/semicolon-separated phone lists no longer drop every number after the first: libphonenumber can swallow the next number as a bogus extension; such results now fall back to the manual scanner
+- Extension keywords unified into a single source (`EXT_KEYWORDS`) — `добавочный` and `extension` no longer lost in fallback/lib paths
+- Manual fallback national format keeps the trunk prefix (`03012345678`, `02071234567`, `0612345678`)
+- `VALID_CODES` synced with libphonenumber (`+211` South Sudan, `+247` Ascension added; phantom `+379`/`+684` removed)
+
+**Changes:**
+- GOST menu item: icon `tabler:phone-spark`, label 🇷🇺 GOST
+
+**Tooling:**
+- `make install` / `make check-installed` — copy the extension into PopClip and detect drift
+- CI: `npm ci --ignore-scripts` in the tests workflow
+
+**Tests:**
+- 511 checks × 3 seeds + 33 manual-fallback checks
+- New: Option-key document-format flip, action-level input-length guard, multi-line formatting/passthrough, VALID_CODES-vs-lib sync, South Sudan fallback, comma/semicolon lists
+
 ### v2.6.3
 
 **Fixes:**
@@ -104,6 +123,25 @@ No formatting behaviour changes.
 **Тесты:**
 - 498 проверок × 3 сида + 25 проверок ручного fallback
 - Добавлены регрессии на даты/IP, trunk-префиксы, 7-значные номера, несколько номеров через `/`, невалидный ввод и ReDoS
+
+### v2.6.4
+
+**Исправления:**
+- Списки номеров через `,`/`;` больше не теряют все номера после первого: libphonenumber мог принять следующий номер за ложное добавочное; такие результаты уходят в ручной сканер
+- Ключевые слова добавочных собраны в единый источник (`EXT_KEYWORDS`) — `добавочный` и `extension` больше не теряются во fallback/lib-путях
+- Национальный формат ручного fallback сохраняет trunk-префикс (`03012345678`, `02071234567`, `0612345678`)
+- `VALID_CODES` синхронизирован с libphonenumber (добавлены `+211` Юж. Судан, `+247` Остров Вознесения; убраны фантомы `+379`/`+684`)
+
+**Изменения:**
+- Пункт ГОСТ: иконка `tabler:phone-spark`, подпись 🇷🇺 GOST
+
+**Инструменты:**
+- `make install` / `make check-installed` — копирование расширения в PopClip и обнаружение расхождений
+- CI: `npm ci --ignore-scripts` в workflow тестов
+
+**Тесты:**
+- 511 проверок × 3 сида + 33 проверки ручного fallback
+- Новое: Option-инверсия формата документа, guard длины на уровне действия, многострочный ввод/пропуск, сверка VALID_CODES с lib, fallback для Юж. Судана, списки через `,`/`;`
 
 ### v2.6.1
 
