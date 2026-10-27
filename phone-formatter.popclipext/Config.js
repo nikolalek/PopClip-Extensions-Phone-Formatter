@@ -170,9 +170,9 @@ const libPhone = (() => {
 })();
 
 const COUNTRY = {
-    RU: { nationalLength: 10, code: '+7', nationalPrefix: '8' },
-    US: { nationalLength: 10, code: '+1', nationalPrefix: '1' },
-    CA: { nationalLength: 10, code: '+1', nationalPrefix: '1' },
+    RU: { nationalLength: 10, code: '+7', nationalPrefix: '8', fixedLength: true },
+    US: { nationalLength: 10, code: '+1', nationalPrefix: '1', fixedLength: true },
+    CA: { nationalLength: 10, code: '+1', nationalPrefix: '1', fixedLength: true },
     DE: { nationalLength: [8, 9, 10, 11], code: '+49', nationalPrefix: '0' },
     GB: { nationalLength: [9, 10, 11], code: '+44', nationalPrefix: '0' },
     FR: { nationalLength: 9, code: '+33', nationalPrefix: '0' },
@@ -281,6 +281,9 @@ const MIN_PHONE_DIGITS = 7;
 const MAX_INPUT_LENGTH = 4096;
 const DEFAULT_COUNTRY = 'RU';
 
+// Compatibility forms (full-width digits like ８４９５) become ASCII before matching.
+const normalizeText = (value) => String(value ?? '').normalize('NFKC');
+
 // Unknown country values must behave the same in the menu and the formatter.
 function normalizeCountry(value) {
     const country = String(value || DEFAULT_COUNTRY).toUpperCase();
@@ -300,7 +303,7 @@ class PhoneFormatter {
     constructor(country, docFormat) {
         this.#country = normalizeCountry(country);
         this.#cfg = COUNTRY[this.#country];
-        this.#extLabel = EXT_LABEL[this.#country] || 'ext.';
+        this.#extLabel = EXT_LABEL[this.#country];
         this.#docFormat = docFormat === 'natl' ? 'natl' : 'intl';
     }
 
@@ -325,25 +328,29 @@ class PhoneFormatter {
         return true;
     }
 
+    // Numbers are replaced where they stand: surrounding text and list
+    // separators survive. Nothing formattable means no action (PopClip stays silent).
     formatMultiple(input, type) {
-        const lines = input.split(/\r?\n/);
-        const singleLine = lines.length === 1;
-        const results = [];
-        for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed) { results.push(''); continue; }
-            const numbers = PhoneParser.findAll(trimmed, this.#country);
-            const raw = singleLine ? '' : trimmed;
-            if (numbers.length === 0) {
-                results.push(this.format(trimmed, type) || raw);
-            } else if (numbers.length === 1) {
-                results.push(this.format(numbers[0].originalText, type) || raw);
-            } else {
-                const formatted = numbers.map(n => this.format(n.originalText, type)).filter(Boolean);
-                results.push(formatted.length > 0 ? formatted.join(', ') : raw);
+        let formatted = false;
+        const lines = input.split(/\r?\n/).map(line => {
+            const text = line.trim();
+            if (!text) return '';
+            let result = text;
+            let shift = 0;
+            for (const number of PhoneParser.findAll(text, this.#country)) {
+                // Stray leading '+'s belong to the number ("++7..." after a double paste).
+                let start = number.startsAt;
+                while (start > 0 && text[start - 1] === '+') start--;
+                const original = text.slice(start, number.endsAt);
+                const value = this.format(original, type);
+                if (!value) continue;
+                formatted = true;
+                result = result.slice(0, start + shift) + value + result.slice(number.endsAt + shift);
+                shift += value.length - original.length;
             }
-        }
-        return results.join('\n');
+            return result;
+        });
+        return formatted ? lines.join('\n') : '';
     }
 
     #toE164(num) {
@@ -365,49 +372,43 @@ class PhoneFormatter {
         const trunk = this.#cfg.nationalPrefix;
         if (!clean.startsWith('+') && trunk && clean.startsWith(trunk)) {
             const national = clean.slice(trunk.length);
-            const fixed = this.#country === 'RU' || this.#country === 'US' || this.#country === 'CA';
-            if (fixed ? national.length === 10 : national.length >= 6 && national.length <= 14) {
+            if (this.#cfg.fixedLength ? national.length === 10 : national.length >= 6 && national.length <= 14) {
                 clean = national; trunkStripped = true;
             }
         }
 
-        if (this.#country === 'RU') {
-            if (clean.length === 12 && clean.startsWith('78')) {
-                const area = clean.substring(2, 5);
-                if (RUSSIAN_AREA_CODES.has(area)) clean = '+7' + clean.substring(2);
-            }
-            if (clean.length === 12 && clean.startsWith('77')) {
-                const area = clean.substring(2, 5);
-                if (RUSSIAN_AREA_CODES.has(area)) clean = '+7' + clean.substring(2);
-            }
-            if (clean.length === 12 && clean.startsWith('87')) {
-                clean = '+7' + clean.substring(2);
-            }
+        // Historic RU trunk forms: 77/78 need a known area code, 87 has no guard.
+        if (this.#country === 'RU' && clean.length === 12 && /^(?:7[78]|87)/.test(clean)) {
+            const area = clean.substring(2, 5);
+            if (clean.startsWith('87') || RUSSIAN_AREA_CODES.has(area)) clean = '+7' + clean.substring(2);
         }
 
         if (libPhone) {
-            return this.#tryParseLib(clean);
+            const fromLib = this.#tryParseLib(clean);
+            if (fromLib !== undefined) return fromLib;
+            // The bundle is present but crashed: degrade to manual formatting
+            // (same as an absent library) instead of rejecting every number.
         }
         return this.#manualNormalize(clean, trunkStripped);
     }
 
+    // undefined = lib threw (caller falls back to manual); null = lib says invalid (reject).
     #tryParseLib(clean) {
         try {
             const parsed = libPhone.parsePhoneNumber(clean, clean.startsWith('+') ? undefined : this.#country);
             if (parsed?.isValid()) return parsed.format('E.164');
-        } catch { }
+        } catch { return undefined; }
         return null;
     }
 
     #manualNormalize(clean, trunkStripped = false) {
         if (!clean) return null;
-        const { code, nationalPrefix } = this.#cfg;
+        const { code, nationalPrefix, fixedLength } = this.#cfg;
         const codeDigits = code.replace('+', '');
 
         if (clean.startsWith(code)) {
             const nationalLength = clean.length - code.length;
-            const fixed = this.#country === 'RU' || this.#country === 'US' || this.#country === 'CA';
-            return (fixed ? nationalLength === 10 : nationalLength >= 4 && nationalLength <= 14) ? clean : null;
+            return (fixedLength ? nationalLength === 10 : nationalLength >= 4 && nationalLength <= 14) ? clean : null;
         }
 
         if (clean.startsWith('+')) {
@@ -422,8 +423,7 @@ class PhoneFormatter {
         }
 
         if (trunkStripped) {
-            const fixed = this.#country === 'RU' || this.#country === 'US' || this.#country === 'CA';
-            if (fixed ? clean.length === 10 : clean.length >= 4 && clean.length <= 14) return code + clean;
+            if (fixedLength ? clean.length === 10 : clean.length >= 4 && clean.length <= 14) return code + clean;
         }
 
         if (this.#country === 'US' || this.#country === 'CA') {
@@ -484,13 +484,12 @@ class PhoneFormatter {
             try {
                 const parsed = libPhone.parsePhoneNumber(e164);
                 if (parsed) {
-                    const national = parsed.formatNational();
-                    const country = parsed.country;
-                    if (country === 'RU') {
-                        const num = national.replace(/[^\d]/g, '');
-                        if (num.length === 11 && num.startsWith('8')) {
-                            return `+7 (${num.slice(1, 4)}) ${num.slice(4, 7)}-${num.slice(7, 9)}-${num.slice(9)}`;
-                        }
+                    // GOST is a RU-only notation; a foreign number must not be
+                    // relabeled as GOST (menu guard checks the option, not the number).
+                    if (parsed.country !== 'RU') return null;
+                    const num = parsed.formatNational().replace(/[^\d]/g, '');
+                    if (num.length === 11 && num.startsWith('8')) {
+                        return `+7 (${num.slice(1, 4)}) ${num.slice(4, 7)}-${num.slice(7, 9)}-${num.slice(9)}`;
                     }
                     return this.#manualFormatGost(e164);
                 }
@@ -499,20 +498,14 @@ class PhoneFormatter {
         return this.#manualFormatGost(e164);
     }
 
+    // GOST is a RU-only notation (same rule as the lib path in #formatGost).
+    // +7 is shared with KZ; KZ NSNs always start with 7, RU codes never do.
     #manualFormatGost(e164) {
-        const code = this.#extractCallingCode(e164.replace('+', ''));
-        if (!code) return e164;
-        const national = e164.slice(code.length);
-        if (code === '+7' && national.length === 10) {
+        if (e164.length === 12 && e164.startsWith('+7') && e164[2] !== '7') {
+            const national = e164.slice(2);
             return `+7 (${national.slice(0, 3)}) ${national.slice(3, 6)}-${national.slice(6, 8)}-${national.slice(8)}`;
         }
-        if (code === '+1' && national.length === 10) {
-            return `+1 (${national.slice(0, 3)}) ${national.slice(3, 6)}-${national.slice(6)}`;
-        }
-        if (code === '+49' && national.length >= 10) {
-            return `+${code.replace('+', '')} ${national.slice(0, 2)} ${national.slice(2)}`;
-        }
-        return this.#manualFormatDocument(e164);
+        return null;
     }
 
     #manualFormatDocument(e164) {
@@ -557,7 +550,7 @@ class PhoneParser {
         text = text.replace(/\s+/g, ' ');
         const isTel = text.toLowerCase().startsWith('tel:');
         if (!isTel) text = text.replace(/^[^\d+]+/, '');
-        let foundExt = null;
+        let foundExt = /** @type {string|null} */ (null);
         for (const pattern of EXT_PATTERNS) {
             const match = text.match(pattern);
             if (match) { text = match[1].trim(); foundExt = match[2]; break; }
@@ -598,9 +591,15 @@ class PhoneParser {
             if (digitCount(match[0]) < MIN_PHONE_DIGITS || isNonPhoneText(match[0])) continue;
             // Slash is both a digit separator (+7/495/...) and a list separator.
             // Split only when every slash-separated chunk is a full number.
-            const chunks = match[0].split(/\s*\/\s*/).filter(chunk => /\d/.test(chunk));
-            if (chunks.length > 1 && chunks.every(chunk => this.hasEnoughDigits(chunk))) {
-                for (const chunk of chunks) add(chunk, match.index);
+            const chunks = [];
+            const chunkRe = /[^\/]+/g;
+            let chunkMatch;
+            while ((chunkMatch = chunkRe.exec(match[0])) !== null) {
+                const text = chunkMatch[0].trim();
+                if (/\d/.test(text)) chunks.push({ text, at: match.index + chunkMatch.index + chunkMatch[0].indexOf(text) });
+            }
+            if (chunks.length > 1 && chunks.every(chunk => this.hasEnoughDigits(chunk.text))) {
+                for (const chunk of chunks) add(chunk.text, chunk.at);
                 continue;
             }
             add(match[0], match.index);
@@ -631,15 +630,15 @@ function makeAction(type) {
     return {
         title: ACTION_TITLES[type],
         icon: ACTION_ICONS[type],
-        regex: PHONE_REGEX,
         code: function (input, options) {
-            if ((input?.text || '').length > MAX_INPUT_LENGTH) return;
+            const text = normalizeText(input?.text);
+            if (text.length > MAX_INPUT_LENGTH) return;
             if (type === 'gost' && normalizeCountry(options?.country) !== 'RU') return;
             try {
-                const country = options?.country || 'RU';
+                const country = normalizeCountry(options?.country);
                 let fmt = options?.docFormat || 'intl';
                 if (type === 'document' && popclip.modifiers?.option) fmt = fmt === 'intl' ? 'natl' : 'intl';
-                const result = new PhoneFormatter(country, fmt).formatMultiple(input.text, type);
+                const result = new PhoneFormatter(country, fmt).formatMultiple(text, type);
                 if (result) {
                     if (popclip.showSuccess) popclip.showSuccess();
                     return result;
@@ -651,7 +650,9 @@ function makeAction(type) {
 }
 
 // Dynamic actions: only the formats enabled in Settings appear.
-// GOST is a RU-only notation: it is shown whenever the country is RU.
+// GOST is a RU-only notation: it is shown when the country is RU and the
+// selection actually holds an RU-formattable number (a foreign number under
+// RU would otherwise show a menu item that silently does nothing).
 const FORMATS = ['contact', 'document', 'gost', 'web'];
 const FORMAT_OPTIONS = {
     contact: 'showContact',
@@ -659,17 +660,18 @@ const FORMAT_OPTIONS = {
     web: 'showWeb'
 };
 
-function enabledFormats(options) {
+function enabledFormats(options, text) {
     const country = normalizeCountry(options?.country);
-    return FORMATS.filter(type =>
-        type === 'gost' ? country === 'RU' : options?.[FORMAT_OPTIONS[type]] !== false
-    );
+    return FORMATS.filter(type => {
+        if (type !== 'gost') return options?.[FORMAT_OPTIONS[type]] !== false;
+        return country === 'RU' && new PhoneFormatter('RU', 'intl').formatMultiple(text, 'gost') !== '';
+    });
 }
 
 function populateActions(input, options) {
-    const text = input?.text || '';
+    const text = normalizeText(input?.text);
     if (text.length > MAX_INPUT_LENGTH || isNonPhoneText(text) || !hasPhoneMatch(text)) return;
-    const enabled = enabledFormats(options);
+    const enabled = enabledFormats(options, text);
     if (!enabled.length) return;
     if (enabled.length === 1) return makeAction(enabled[0]);
     return [{
@@ -687,5 +689,10 @@ function populateActions(input, options) {
 module.exports = {
     actions: populateActions,
     // exported for tests only; PopClip only consumes `actions`
-    VALID_CODES
+    VALID_CODES,
+    COUNTRY,
+    EXT_LABEL,
+    PHONE_REGEX,
+    PhoneFormatter,
+    PhoneParser
 };

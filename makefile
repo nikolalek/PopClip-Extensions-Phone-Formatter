@@ -24,8 +24,13 @@ CONFIG   := $(EXT)/Config.js
 POPCLIP  ?= /Applications/PopClip.app/Contents/MacOS/PopClip
 INSTALLED := $(HOME)/Library/Application Support/PopClip/Extensions/$(EXT)
 
-# Версия из аргумента или из файла
-V        ?= $(shell cat VERSION 2>/dev/null || echo "2.5.0")
+# Версия из аргумента или из файла. Фильтр на месте рождения значения: VERSION
+# контролируется контентом PR, и $(V) подставляется в shell-рецепты как есть.
+# V= с командной строки — доверенный ввод оператора (как у rollback).
+V        ?= $(shell grep -E '^[0-9]+(\.[0-9]+)*$$' VERSION 2>/dev/null)
+# Один аргумент = одна строка: перенос строки или пробел в $(V) ломает
+# shell-рецепты (grep-проверки линейны и такой обход пропускают).
+$(if $(word 2,$(V)),$(error V=$(V) содержит пробел или перенос строки — отмена))
 TAG      := v$(V)
 
 GREEN    := \033[32m
@@ -33,10 +38,10 @@ YELLOW   := \033[33m
 RED      := \033[31m
 RESET    := \033[0m
 
-.PHONY: all clean zip verify-zip install check-installed release check version list rollback test check-lib update-lib typecheck harness
+.PHONY: all clean zip verify-zip install check-installed release check check-version-sync version list rollback test check-lib update-lib typecheck harness jsc
 
 # === Основная цель ===
-release: check-clean check-version typecheck test zip verify-zip git-tag gh-release
+release: check-clean check-version check-version-sync typecheck test zip verify-zip git-tag gh-release
 	@echo ""
 	@echo "$(GREEN)✓ Релиз $(TAG) создан$(RESET)"
 	@echo "  https://github.com/nikolalek/PopClip-Extensions-Phone-Formatter/releases/tag/$(TAG)"
@@ -50,14 +55,26 @@ check-clean:
 	fi
 
 check-version:
+	@test -n "$(V)" || (echo "$(RED)✗ VERSION отсутствует или пуст$(RESET)"; exit 1)
 	@if git tag -l 2>/dev/null | grep -q "^$(TAG)$$"; then \
 		echo "$(RED)✗ Тег $(TAG) уже существует$(RESET)"; \
 		echo "  Используйте: make release V=x.x.x с новой версией"; \
 		exit 1; \
 	fi
 
+# VERSION должен совпадать с бейджами README и секцией в RELEASE_NOTES
+check-version-sync:
+	@test -n "$(V)" || (echo "$(RED)✗ VERSION отсутствует или пуст$(RESET)"; exit 1)
+	@grep -q "version-$(V)-green" README.md && grep -q "version-$(V)-green" README.ru.md || \
+		(echo "$(RED)✗ Бейдж версии не совпадает с VERSION ($(V)) в README.md/README.ru.md$(RESET)"; exit 1)
+	@grep -q "^### v$(V)\b" RELEASE_NOTES.md || \
+		(echo "$(RED)✗ В RELEASE_NOTES.md нет секции v$(V)$(RESET)"; exit 1)
+	@echo "$(GREEN)✓$(RESET) Версии синхронизированы ($(V))"
+
 # === Обновить версию ===
 version:
+	@printf '%s' '$(V)' | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$$' || \
+		(echo "$(RED)✗ V=$(V) не похож на x.y.z — отмена$(RESET)"; exit 1)
 	@echo "$(V)" > VERSION
 	@echo "$(GREEN)Версия: $(V)$(RESET)"
 
@@ -106,7 +123,7 @@ gh-release: $(ZIP)
 		gh release create $(TAG) --title "$(NAME) $(TAG)" --notes-file=RELEASE_NOTES.md $(ZIP); \
 	else \
 		gh release create $(TAG) --title "$(NAME) $(TAG)" --notes "См. CHANGELOG.md" $(ZIP); \
-	fi
+	fi || { echo "$(RED)✗ gh release create не удался — тег уже отправлен, откат: make rollback V=$(V)$(RESET)"; exit 1; }
 
 # === Среда разработки (popclip.app/dev/js-environment) ===
 # TypeScript в PopClip встроен (sucrase, сборка не нужна); здесь только проверка
@@ -117,6 +134,12 @@ typecheck:
 
 harness:
 	@$(POPCLIP) run $(CONFIG) && echo "$(GREEN)✓$(RESET) PopClip загрузил модуль (JavaScriptCore)"
+
+# Тот же движок без PopClip (для CI и локальных прогонов).
+JSC ?= $(firstword $(wildcard /System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc /System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Resources/jsc))
+jsc:
+	@test -x "$(JSC)" || (echo "$(RED)✗ jsc не найден: $(JSC)$(RESET)"; exit 1)
+	@cd $(EXT) && "$(JSC)" ../test/jsc-harness.js
 
 # === Тесты ===
 test:
@@ -137,7 +160,7 @@ LIBFILE  := $(EXT)/libphonenumber-max.js
 LIBPKG   := libphonenumber-js
 LIBBUILD := max/index.cjs
 LIBVER   = $(shell grep -o '$(LIBPKG)@[0-9][0-9.]*' $(LIBFILE) 2>/dev/null | head -1 | cut -d@ -f2)
-LIBLATEST ?= $(shell python3 -c "import json,urllib.request; print(json.load(urllib.request.urlopen('https://registry.npmjs.org/$(LIBPKG)/latest', timeout=30))['version'])" 2>/dev/null)
+LIBLATEST ?= $(shell python3 -c "import json,urllib.request; print(json.load(urllib.request.urlopen('https://registry.npmjs.org/$(LIBPKG)/latest', timeout=30))['version'])" 2>/dev/null | grep -E '^[0-9]+(\.[0-9]+)*$$')
 
 check-lib:
 	@echo "Встроена: $(or $(LIBVER),неизвестно — обновите через make update-lib)"
@@ -185,6 +208,8 @@ ifneq ($(origin V),command line)
 	@echo "$(RED)✗ Укажите версию: make rollback V=x.x.x$(RESET)"
 	@exit 1
 else
+	@printf '%s\n' '$(V)' | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$$' || \
+		(echo "$(RED)✗ V=$(V) не похож на x.y.z — отмена$(RESET)"; exit 1)
 	@echo "$(YELLOW)Удаление релиза $(TAG)...$(RESET)"
 	@gh release delete $(TAG) -y 2>/dev/null || echo "  Релиз не найден"
 	@git tag -d $(TAG) 2>/dev/null || echo "  Тег не найден локально"
@@ -196,10 +221,11 @@ endif
 help:
 	@echo "Использование:"
 	@echo "  make release        - создать релиз (версия из VERSION файла)"
-	@echo "  make release V=2.6  - создать релиз с версией 2.6"
-	@echo "  make version V=2.6  - обновить версию в файлах"
+	@echo "  make release V=x.x.x  - создать релиз с конкретной версией"
+	@echo "  make version V=x.x.x  - обновить версию в файлах"
 	@echo "  make zip            - собрать .popclipextz"
 	@echo "  make test           - синтаксис + тесты форматирования"
+	@echo "  make check-version-sync - VERSION ↔ README-бейджи ↔ RELEASE_NOTES"
 	@echo "  make typecheck      - типы (@popclip/types + tsc)"
 	@echo "  make harness        - загрузка Config.js в среде PopClip (JSC)"
 	@echo "  make check-lib      - встроенная vs последняя версия libphonenumber"

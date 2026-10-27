@@ -5,7 +5,7 @@
     "module": "preserve",
     "moduleResolution": "bundler",
     "skipLibCheck": true,
-    "strict": false,
+    "strict": true,
     "noImplicitAny": false,
     "allowJs": true,
     "checkJs": true,

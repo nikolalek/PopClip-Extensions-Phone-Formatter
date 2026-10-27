@@ -1,7 +1,7 @@
 <p align="center">
   <a href="README.ru.md"><img src="https://img.shields.io/badge/lang-Русский-red?style=flat-square"></a>
   <img src="https://img.shields.io/badge/PopClip-4200+-blue?style=flat-square&logo=apple">
-  <img src="https://img.shields.io/badge/version-2.6.4-green?style=flat-square">
+  <img src="https://img.shields.io/badge/version-2.7.0-green?style=flat-square">
   <img src="https://img.shields.io/badge/license-MIT-yellow?style=flat-square">
 </p>
 
@@ -29,10 +29,12 @@
 
 - ✅ Automatic extension detection (`доб.`, `ext.`, `x`, `#`, `,`, `;`, `Durchwahl`, `poste`, …)
 - ✅ Smart parsing of messy input (`++`, `00`-prefix, quotes, `Тел:`, `tel:` URIs)
+- ✅ Formats in place: the text around a number (words, punctuation, list separators) is kept as typed
+- ✅ Full-width digits (`８４９５…`) are normalized before formatting
 - ✅ Validated against bundled `libphonenumber-max.js` (offline-first)
 - ✅ Runtime output guard: strict E.164 / RFC 3966 check before paste
 - ✅ Modifier key: hold **Option (⌥)** on **Documents** to invert format (intl ↔ natl)
-- ✅ Format toggles in Settings: enable only the items you need (E.164, E.123, Web); a single enabled format skips the submenu. GOST is always on for RU
+- ✅ Format toggles in Settings: enable only the items you need (E.164, E.123, Web); a single enabled format skips the submenu. GOST appears only when the selection contains an RU number
 - ✅ Full manual fallback when the library rejects input
 
 ## Screenshots
@@ -56,7 +58,7 @@
 
 **Advanced:**
 - Hold **Option (⌥)** when clicking **Documents** to invert format (intl ↔ natl)
-- **GOST** is always included when the country option is RU, and never for other countries
+- **GOST** appears when the country option is RU and the selection has an RU number; never for other countries
 - Formats are toggled in Settings; with a single format enabled it appears without the submenu
 
 ### Supported Input Formats
@@ -84,50 +86,52 @@
 <details>
 <summary><strong>View all 42 countries</strong></summary>
 
+> Extension length is 2–6 digits for every country — one uniform limit enforced by the formatter.
+
 | Country | Code | National Length | Ext. Length |
 |---------|------|-----------------|-------------|
 | 🇷🇺 Russia | +7 | 10 | 2-6 |
 | 🇺🇸 United States | +1 | 10 | 2-6 |
-| 🇬🇧 United Kingdom | +44 | 9-11 | 2-5 |
-| 🇩🇪 Germany | +49 | 8-11 | 2-5 |
-| 🇫🇷 France | +33 | 9 | 2-4 |
-| 🇨🇳 China | +86 | 8, 10-11 | 2-5 |
-| 🇯🇵 Japan | +81 | 9-11 | 2-4 |
-| 🇰🇷 South Korea | +82 | 8-10 | 2-5 |
-| 🇧🇷 Brazil | +55 | 8, 10-11 | 2-5 |
-| 🇮🇳 India | +91 | 10 | 2-5 |
-| 🇦🇺 Australia | +61 | 9 | 2-5 |
+| 🇬🇧 United Kingdom | +44 | 9-11 | 2-6 |
+| 🇩🇪 Germany | +49 | 8-11 | 2-6 |
+| 🇫🇷 France | +33 | 9 | 2-6 |
+| 🇨🇳 China | +86 | 8, 10-11 | 2-6 |
+| 🇯🇵 Japan | +81 | 9-11 | 2-6 |
+| 🇰🇷 South Korea | +82 | 8-10 | 2-6 |
+| 🇧🇷 Brazil | +55 | 8, 10-11 | 2-6 |
+| 🇮🇳 India | +91 | 10 | 2-6 |
+| 🇦🇺 Australia | +61 | 9 | 2-6 |
 | 🇨🇦 Canada | +1 | 10 | 2-6 |
-| 🇲🇽 Mexico | +52 | 10-11 | 2-4 |
-| 🇮🇹 Italy | +39 | 9-11 | 2-4 |
-| 🇪🇸 Spain | +34 | 9 | 2-4 |
-| 🇳🇱 Netherlands | +31 | 8-9 | 2-4 |
-| 🇵🇱 Poland | +48 | 8-9 | 2-4 |
-| 🇹🇷 Turkey | +90 | 10 | 2-4 |
-| 🇹🇭 Thailand | +66 | 8-9 | 2-4 |
-| 🇸🇪 Sweden | +46 | 7-9 | 2-4 |
-| 🇳🇴 Norway | +47 | 8 | 2-4 |
-| 🇩🇰 Denmark | +45 | 8 | 2-4 |
-| 🇫🇮 Finland | +358 | 8-9 | 2-4 |
-| 🇦🇹 Austria | +43 | 8-13 | 2-4 |
-| 🇨🇭 Switzerland | +41 | 9 | 2-4 |
-| 🇧🇪 Belgium | +32 | 8-9 | 2-4 |
-| 🇮🇪 Ireland | +353 | 8-9 | 2-4 |
-| 🇵🇹 Portugal | +351 | 9 | 2-4 |
-| 🇬🇷 Greece | +30 | 10 | 2-4 |
-| 🇨🇿 Czech Republic | +420 | 9 | 2-4 |
-| 🇭🇺 Hungary | +36 | 8-9 | 2-4 |
-| 🇷🇴 Romania | +40 | 9 | 2-4 |
-| 🇧🇬 Bulgaria | +359 | 8-9 | 2-4 |
-| 🇭🇷 Croatia | +385 | 8-9 | 2-4 |
-| 🇸🇮 Slovenia | +386 | 8 | 2-4 |
-| 🇸🇰 Slovakia | +421 | 9 | 2-4 |
-| 🇱🇹 Lithuania | +370 | 8 | 2-4 |
-| 🇱🇻 Latvia | +371 | 8 | 2-4 |
-| 🇪🇪 Estonia | +372 | 7-8 | 2-4 |
-| 🇨🇾 Cyprus | +357 | 8 | 2-4 |
-| 🇲🇹 Malta | +356 | 8 | 2-4 |
-| 🇱🇺 Luxembourg | +352 | 8-9 | 2-4 |
+| 🇲🇽 Mexico | +52 | 10-11 | 2-6 |
+| 🇮🇹 Italy | +39 | 9-11 | 2-6 |
+| 🇪🇸 Spain | +34 | 9 | 2-6 |
+| 🇳🇱 Netherlands | +31 | 8-9 | 2-6 |
+| 🇵🇱 Poland | +48 | 8-9 | 2-6 |
+| 🇹🇷 Turkey | +90 | 10 | 2-6 |
+| 🇹🇭 Thailand | +66 | 8-9 | 2-6 |
+| 🇸🇪 Sweden | +46 | 7-9 | 2-6 |
+| 🇳🇴 Norway | +47 | 8 | 2-6 |
+| 🇩🇰 Denmark | +45 | 8 | 2-6 |
+| 🇫🇮 Finland | +358 | 8-9 | 2-6 |
+| 🇦🇹 Austria | +43 | 8-13 | 2-6 |
+| 🇨🇭 Switzerland | +41 | 9 | 2-6 |
+| 🇧🇪 Belgium | +32 | 8-9 | 2-6 |
+| 🇮🇪 Ireland | +353 | 8-9 | 2-6 |
+| 🇵🇹 Portugal | +351 | 9 | 2-6 |
+| 🇬🇷 Greece | +30 | 10 | 2-6 |
+| 🇨🇿 Czech Republic | +420 | 9 | 2-6 |
+| 🇭🇺 Hungary | +36 | 8-9 | 2-6 |
+| 🇷🇴 Romania | +40 | 9 | 2-6 |
+| 🇧🇬 Bulgaria | +359 | 8-9 | 2-6 |
+| 🇭🇷 Croatia | +385 | 8-9 | 2-6 |
+| 🇸🇮 Slovenia | +386 | 8 | 2-6 |
+| 🇸🇰 Slovakia | +421 | 9 | 2-6 |
+| 🇱🇹 Lithuania | +370 | 8 | 2-6 |
+| 🇱🇻 Latvia | +371 | 8 | 2-6 |
+| 🇪🇪 Estonia | +372 | 7-8 | 2-6 |
+| 🇨🇾 Cyprus | +357 | 8 | 2-6 |
+| 🇲🇹 Malta | +356 | 8 | 2-6 |
+| 🇱🇺 Luxembourg | +352 | 8-9 | 2-6 |
 
 </details>
 
@@ -169,7 +173,7 @@ Input → Clean & Parse Extension → libphonenumber-max (bundled, offline)
 <details>
 <summary><strong>Dependencies</strong></summary>
 
-- **Runtime**: `libphonenumber-max.js` (bundled UMD, ~250 KB, offline)
+- **Runtime**: `libphonenumber-max.js` (bundled IIFE, ~280 KB, offline)
 - **Updates**: `make check-lib` shows bundled vs latest; `make update-lib` rebuilds the bundle from npm when stale
 - **Platform**: PopClip 4200+
 - **OS**: macOS 11+
@@ -195,6 +199,18 @@ Found a bug? Please [open an issue](https://github.com/nikolalek/PopClip-Extensi
 
 ## Changelog
 
+### v2.7.0
+
+**Fixes:**
+- Formatting no longer discards the text around a number: `Звонить 84951234567 сегодня` → `Звонить +74951234567 сегодня`; list separators stay as typed (`/`, `;`, `,`)
+- GOST menu item is hidden when the selection has no RU-formattable number; a foreign number under RU country used to show a dead item
+- Full-width digits (`８４９５…`) are normalized (NFKC) before matching
+
+**Tooling:**
+- `strict` typecheck enabled (`noImplicitAny` stays off until the JS gets annotations)
+- `make jsc` runs Config.js in the real JavaScriptCore; new macOS CI job
+- Tests: 554 checks × 3 seeds + 42 fallback; deterministic country sampling for shared calling codes (+7 RU/KZ, +1 US/CA), extension-bound and output-guard mutation tests
+
 ### v2.6.4
 - **Fixed**: comma/semicolon-separated phone lists no longer drop every number after the first (libphonenumber mistook the next number for an extension)
 - **Fixed**: extension keywords unified into one source list — `добавочный` and `extension` no longer lost in some paths
@@ -202,7 +218,7 @@ Found a bug? Please [open an issue](https://github.com/nikolalek/PopClip-Extensi
 - **Fixed**: `VALID_CODES` back in sync with libphonenumber (`+211` South Sudan, `+247` Ascension added; phantoms removed)
 - **Changed**: GOST item icon `tabler:phone-spark`, label 🇷🇺
 - **Tooling**: `make install` / `make check-installed` to keep the locally installed copy in sync; `npm ci --ignore-scripts` in CI
-- **Tests**: 511 checks × 3 seeds + 33 fallback checks; Option-key flip, action-level input guard, multi-line behavior, VALID_CODES sync
+- **Tests**: 554 checks × 3 seeds + 42 fallback checks; Option-key flip, action-level input guard, multi-line behavior, in-place replacement, VALID_CODES sync
 
 ### v2.6.3
 - **Fixed**: menu no longer appears for dates, IPv4 addresses, decimals, and thousands-separated numbers; a real phone after a date/IP/`/` is still detected

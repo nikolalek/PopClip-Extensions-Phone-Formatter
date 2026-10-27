@@ -19,4 +19,15 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci --ignore-scripts
-      - run: make test typecheck verify-zip
+      - run: make test typecheck verify-zip check-version-sync
+
+  # Config.js runs in JavaScriptCore inside PopClip, not in Node: catch engine
+  # and runtime differences (private fields, NFKC, regex) on a real macOS JSC.
+  jsc:
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - run: make jsc

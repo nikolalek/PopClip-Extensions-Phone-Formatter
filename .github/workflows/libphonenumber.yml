@@ -1,6 +1,6 @@
 name: libphonenumber update check
 
-# Weekly check: compare bundled libphonenumber-max.js against npm latest.
+# Daily check: compare bundled libphonenumber-max.js against npm latest.
 # If stale -> rebuild in a read-only job, then open a PR from a separate
 # write-enabled job that never executes the upstream package.
 
@@ -49,7 +49,7 @@ jobs:
         if: steps.check.outputs.stale == 'true'
         env:
           LIBLATEST: ${{ steps.check.outputs.latest }}
-        run: npm ci && make update-lib LIBLATEST="$LIBLATEST" && make zip
+        run: npm ci --ignore-scripts && make update-lib LIBLATEST="$LIBLATEST" && make zip
 
       - name: Upload rebuilt files
         if: steps.check.outputs.stale == 'true'

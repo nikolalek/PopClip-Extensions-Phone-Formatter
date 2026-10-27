@@ -58,52 +58,56 @@ const libE164 = (e164orLocal, country) => {
     } catch { return null; }
 };
 
-// Find a lib-valid random number per country (cap attempts)
+// Find a lib-valid random number assigned to this exact country (cap attempts).
+// +7 and +1 are shared (RU/KZ, US/CA): a sibling's number is not a valid sample
+// for this one, otherwise the GOST expectation below flakes.
 function pickValid(country, cfg) {
     for (let i = 0; i < 400; i++) {
         const len = cfg.lens[rint(cfg.lens.length)];
         const nat = rdigits(len);
-        const e = libE164('+' + cfg.code + nat, country);
-        if (e) return { nat, e164: e };
+        const e164 = libE164('+' + cfg.code + nat, country);
+        if (!e164) continue;
+        let parsed = null;
+        try { parsed = lib.parsePhoneNumber(e164); } catch { continue; }
+        if (parsed?.country === country) return { nat, e164 };
     }
     return null;
 }
 
 const EXT_LABELS = ['доб.', 'ext.', 'ext', 'x', '#', ',', ';', 'Durchwahl', 'poste', 'int.'];
+// [prefix, core, suffix] — text around the number must survive formatting as is.
 function mangle(e164, country, cfg, withExt) {
     const nat = e164.slice(('+' + cfg.code).length);
     const ext = withExt ? String(100 + rint(9000)) : null;
-    // [text, usedTrunkForm] — Italy keeps trunk 0 inside E.164 (+390...)
     const variants = [
-        [e164, false],
-        ['+' + cfg.code + ' ' + nat, false],
-        ['00' + cfg.code + nat, false],
-        ['00' + cfg.code + ' ' + nat.replace(/(\d{3})(?=\d)/g, '$1 '), false],
-        [nat, false],                                            // bare national
-        ...(cfg.trunk && (country !== 'IT' || libE164(cfg.code + cfg.trunk + nat, country))
-            ? [[cfg.trunk + nat, true]] : []),                   // trunk prefix (IT: only if valid with 0)
-        ['(' + '+' + cfg.code + ') ' + nat, false],
-        [e164.replace(/(\d{2})(?=\d)/g, '$1-'), false],
-        [e164.replace(/(\d{3})(?=\d)/g, '$1.'), false],
-        [`"${e164}"`, false],
-        [`Тел: ${e164}`, false],
-        [`tel:${e164}`, false],
-        [`  ${e164}  `, false],
-        ['+' + cfg.code + '(' + nat.slice(0, 3) + ')' + nat.slice(3), false],
+        ['', e164, ''],
+        ['', '+' + cfg.code + ' ' + nat, ''],
+        ['', '00' + cfg.code + nat, ''],
+        ['', '00' + cfg.code + ' ' + nat.replace(/(\d{3})(?=\d)/g, '$1 '), ''],
+        ['', nat, ''],                                            // bare national
+        ...(cfg.trunk ? [['', cfg.trunk + nat, '']] : []),         // trunk prefix
+        ['', '(' + '+' + cfg.code + ') ' + nat, ''],
+        ['', e164.replace(/(\d{2})(?=\d)/g, '$1-'), ''],
+        ['', e164.replace(/(\d{3})(?=\d)/g, '$1.'), ''],
+        ['"', e164, '"'],
+        ['Тел: ', e164, ''],
+        ['', 'tel:' + e164, ''],
+        ['', '+' + cfg.code + '(' + nat.slice(0, 3) + ')' + nat.slice(3), ''],
     ];
-    const [v0, usedTrunk] = variants[rint(variants.length)];
-    let v = v0;
-    // Italy: trunk 0 is part of the NSN and stays in E.164
-    const base = (country === 'IT' && usedTrunk) ? '+39' + '0' + nat : e164;
+    const [prefix, core, suffix] = variants[rint(variants.length)];
+    const base = e164;
+    let number = core;
     if (ext) {
         const style = EXT_LABELS[rint(EXT_LABELS.length)];
-        if (style === ',') v = `${v},${ext}`;
-        else if (style === ';') v = `${v};${ext}`;
-        else if (style === '#') v = `${v}#${ext}`;
-        else if (style === 'x') v = `${v} x${ext}`;
-        else v = `${v} ${style} ${ext}`;
+        if (style === ',') number = `${core},${ext}`;
+        else if (style === ';') number = `${core};${ext}`;
+        else if (style === '#') number = `${core}#${ext}`;
+        else if (style === 'x') number = `${core} x${ext}`;
+        else number = `${core} ${style} ${ext}`;
     }
-    return { text: v, ext, base };
+    // Leading/trailing whitespace is trimmed by the extension.
+    const pad = rint(5) === 0 ? '  ' : '';
+    return { text: pad + prefix + number + suffix + pad, ext, base, prefix, suffix };
 }
 
 let pass = 0, fail = 0;
@@ -122,18 +126,25 @@ const ok = (cond, label, detail) => {
         `missing=${missing} extra=${extra}`);
 }
 
+// COUNTRY must stay in sync between Config.js and this test mirror
+{
+    const inExt = Object.keys(ext.COUNTRY).sort().join(',');
+    const inTest = Object.keys(COUNTRIES).sort().join(',');
+    ok(inExt === inTest, 'COUNTRY sync', `ext=[${inExt}] test=[${inTest}]`);
+}
+
 const E164RE = /^\+[1-9]\d{6,14}$/;
 for (const [country, cfg] of Object.entries(COUNTRIES)) {
     const picked = pickValid(country, cfg);
     if (!picked) { ok(false, country, 'no lib-valid random number found'); continue; }
     for (const withExt of [false, true]) {
-        const { text, ext, base } = mangle(picked.e164, country, cfg, withExt);
+        const { text, ext, base, prefix, suffix } = mangle(picked.e164, country, cfg, withExt);
         const c = run(contactA, text, country);
         const w = run(webA, text, country);
         const d = run(documentA, text, country);
         const g = run(gostA, text, country);
-        const wantC = base + (ext ? `,${ext}` : '');
-        const wantW = `tel:${base}` + (ext ? `;ext=${ext}` : '');
+        const wantC = prefix + base + (ext ? `,${ext}` : '') + suffix;
+        const wantW = prefix + `tel:${base}` + (ext ? `;ext=${ext}` : '') + suffix;
         ok(c === wantC, `${country}${ext ? '+ext' : ''} contact`, `in=${JSON.stringify(text)} got=${c} want=${wantC}`);
         ok(w === wantW, `${country}${ext ? '+ext' : ''} web`, `in=${JSON.stringify(text)} got=${w} want=${wantW}`);
         ok(typeof d === 'string' && d.length > 0 && !/\s{2}/.test(d), `${country} document`, `in=${JSON.stringify(text)} got=${d}`);
@@ -166,6 +177,14 @@ for (const [country, input, want] of edge) {
 }
 
 ok(run(gostA, '84951234567', 'RU') === '+7 (495) 123-45-67', 'gost RU exact', run(gostA, '84951234567', 'RU'));
+// GOST is RU-only: a foreign number must not be relabeled as GOST (regression)
+ok(run(gostA, '+1 202 555 0134', 'RU') === undefined, 'gost rejects US number with RU country',
+    run(gostA, '+1 202 555 0134', 'RU'));
+ok(run(gostA, '+49 30 12345678', 'RU') === undefined, 'gost rejects DE number with RU country',
+    run(gostA, '+49 30 12345678', 'RU'));
+// +7 is shared with KZ — GOST must reject Kazakh NSNs (start with 7) in both modes
+ok(run(gostA, '+7 701 1234567', 'RU') === undefined, 'gost rejects KZ number',
+    run(gostA, '+7 701 1234567', 'RU'));
 ok(run(gostA, '84951234567 ext. 12', 'RU') === '+7 (495) 123-45-67, доб. 12',
     'gost RU exact with ext', run(gostA, '84951234567 ext. 12', 'RU'));
 
@@ -206,11 +225,11 @@ for (const text of ['1234.5678', '1234/5678', '1.234.567', '12.345.678']) {
     ok(ext.actions({ text }, { ...ALL_FORMATS, country: 'SE' }) === undefined,
         'decimal/fraction -> no actions', JSON.stringify(text));
 }
-ok(run(contactA, 'orders/84951234567', 'RU') === '+74951234567', 'phone after slash',
+ok(run(contactA, 'orders/84951234567', 'RU') === 'orders/+74951234567', 'phone after slash',
     run(contactA, 'orders/84951234567', 'RU'));
-ok(run(contactA, 'Meeting 12.12.2026 84951234567', 'RU') === '+74951234567', 'phone after date',
+ok(run(contactA, 'Meeting 12.12.2026 84951234567', 'RU') === 'Meeting 12.12.2026 +74951234567', 'phone after date',
     run(contactA, 'Meeting 12.12.2026 84951234567', 'RU'));
-ok(run(contactA, '10.0.0.1, 84951234567', 'RU') === '+74951234567', 'phone after IPv4',
+ok(run(contactA, '10.0.0.1, 84951234567', 'RU') === '10.0.0.1, +74951234567', 'phone after IPv4',
     run(contactA, '10.0.0.1, 84951234567', 'RU'));
 ok(ext.actions({ text: '1 2 3 4 5 6' }, ALL_FORMATS) === undefined, '6 digits -> no actions', '');
 ok(ext.actions({ text: '123-456' }, ALL_FORMATS) === undefined, '6 digits dashed -> no actions', '');
@@ -228,7 +247,7 @@ ok(run(contactA, '+999123456789', 'RU') === undefined, 'reject invalid code', ru
 ok(run(contactA, '+12345678', 'RU') === undefined, 'reject short foreign', run(contactA, '+12345678', 'RU'));
 ok(run(contactA, '84951234567 ext. 12', 'RU') === '+74951234567,12', '2-digit ext',
     run(contactA, '84951234567 ext. 12', 'RU'));
-ok(run(contactA, '84951234567 ext. 1234567', 'RU') === '+74951234567', '7-digit ext dropped',
+ok(run(contactA, '84951234567 ext. 1234567', 'RU') === '+74951234567 ext. 1234567', '7-digit ext left as is',
     run(contactA, '84951234567 ext. 1234567', 'RU'));
 ok(run(contactA, '84951234567#12', 'RU') === '+74951234567,12', '# ext', '');
 ok(run(contactA, '84951234567 int. 12', 'RU') === '+74951234567,12', 'int. ext', '');
@@ -237,13 +256,13 @@ ok(run(contactA, '84951234567 добавочный 12', 'RU') === '+74951234567,
 ok(run(contactA, '84951234567 extension 12', 'RU') === '+74951234567,12', 'extension ext',
     run(contactA, '84951234567 extension 12', 'RU'));
 ok(run(webA, '84951234567 x12', 'RU') === 'tel:+74951234567;ext=12', 'x ext web', '');
-ok(run(contactA, 'Тел: +7 495 123 45 67', 'RU') === '+74951234567', 'Тел: prefix', '');
-ok(run(contactA, '"84951234567 ext. 12"', 'RU') === '+74951234567,12', 'quoted ext', '');
-ok(run(contactA, '84951234567 / 84957654321', 'RU') === '+74951234567, +74957654321',
+ok(run(contactA, 'Тел: +7 495 123 45 67', 'RU') === 'Тел: +74951234567', 'Тел: prefix', '');
+ok(run(contactA, '"84951234567 ext. 12"', 'RU') === '"+74951234567,12"', 'quoted ext', '');
+ok(run(contactA, '84951234567 / 84957654321', 'RU') === '+74951234567 / +74957654321',
     'multiple numbers', run(contactA, '84951234567 / 84957654321', 'RU'));
 ok(run(contactA, '84951234567, 84957654321', 'RU') === '+74951234567, +74957654321',
     'comma list', run(contactA, '84951234567, 84957654321', 'RU'));
-ok(run(contactA, '84951234567;84957654321', 'RU') === '+74951234567, +74957654321',
+ok(run(contactA, '84951234567;84957654321', 'RU') === '+74951234567;+74957654321',
     'semicolon list', run(contactA, '84951234567;84957654321', 'RU'));
 ok(run(contactA, '84951234567, 84957654321, 84950000000', 'RU') === '+74951234567, +74957654321, +74950000000',
     'three-number comma list', run(contactA, '84951234567, 84957654321, 84950000000', 'RU'));
@@ -268,13 +287,17 @@ ok(run(contactA, '84951234567, 12', 'RU') === '+74951234567,12',
 
 // Dynamic actions: format checkboxes filter the menu; a single format flattens to a top-level action
 {
-    const count = (options) => submenuOf({ ...ALL_FORMATS, ...options }).length;
+    const count = (options, text) => submenuOf({ ...ALL_FORMATS, ...options }, text).length;
     ok(count({}) === 4, 'all formats shown', `count=${count({})}`);
     ok(count({ showWeb: false }) === 3, 'web hidden', `count=${count({ showWeb: false })}`);
     ok(count({ country: 'US' }) === 3, 'gost hidden outside RU', `count=${count({ country: 'US' })}`);
     ok(count({ country: 'ru' }) === 4, 'gost shown for lowercase ru', `count=${count({ country: 'ru' })}`);
     ok(count({ country: 'us' }) === 3, 'gost hidden for lowercase us', `count=${count({ country: 'us' })}`);
     ok(count({ country: 'ZZ' }) === 4, 'unknown country falls back to RU incl. GOST', `count=${count({ country: 'ZZ' })}`);
+    ok(count({}, '+1 202 555 0134') === 3, 'gost hidden when the selection holds no RU number',
+        `count=${count({}, '+1 202 555 0134')}`);
+    ok(count({}, '84951234567, +1 202 555 0134') === 4, 'gost shown for a mixed list',
+        `count=${count({}, '84951234567, +1 202 555 0134')}`);
     ok(run(contactA, '84951234567', 'ZZ') === '+74951234567', 'unknown country formats as RU',
         run(contactA, '84951234567', 'ZZ'));
     ok(count({ country: 'US', showWeb: false, showDocument: false, showContact: false }) === 0,
@@ -291,15 +314,43 @@ ok(run(contactA, '84951234567, 12', 'RU') === '+74951234567,12',
 // Guarded paths that mutation testing showed untested
 {
     // Option key inverts the document format at click time
-    global.popclip.modifiers = { option: true };
-    const natlViaOption = documentA.code({ text: '84951234567' }, { country: 'RU', docFormat: 'intl' });
-    ok(natlViaOption === '8 (495) 123-45-67', 'option key flips intl to natl', natlViaOption);
-    const intlViaOption = documentA.code({ text: '84951234567' }, { country: 'RU', docFormat: 'natl' });
-    ok(intlViaOption === '+7 495 123 45 67', 'option key flips natl to intl', intlViaOption);
-    global.popclip.modifiers = {};
+    try {
+        global.popclip.modifiers = { option: true };
+        const natlViaOption = documentA.code({ text: '84951234567' }, { country: 'RU', docFormat: 'intl' });
+        ok(natlViaOption === '8 (495) 123-45-67', 'option key flips intl to natl', natlViaOption);
+        const intlViaOption = documentA.code({ text: '84951234567' }, { country: 'RU', docFormat: 'natl' });
+        ok(intlViaOption === '+7 495 123 45 67', 'option key flips natl to intl', intlViaOption);
+    } finally { global.popclip.modifiers = {}; }
 
     // Per-action MAX_INPUT_LENGTH guard (menu gate alone is not enough)
-    ok(contactA.code({ text: '9'.repeat(5000) }, ALL_FORMATS) === undefined, 'action-level length guard', '');
+    ok(contactA.code({ text: '84951234567 ' + 'x'.repeat(5000) }, ALL_FORMATS) === undefined,
+        'action-level length guard', '');
+
+    // Numbers are replaced where they stand: surrounding text and separators survive.
+    ok(run(contactA, 'Звонить 84951234567 сегодня', 'RU') === 'Звонить +74951234567 сегодня',
+        'text around number preserved', run(contactA, 'Звонить 84951234567 сегодня', 'RU'));
+    ok(run(webA, 'Звонить 84951234567 сегодня', 'RU') === 'Звонить tel:+74951234567 сегодня',
+        'web text around number preserved', run(webA, 'Звонить 84951234567 сегодня', 'RU'));
+    ok(run(contactA, 'Звонить 84951234567 или 84957654321 сегодня', 'RU')
+        === 'Звонить +74951234567 или +74957654321 сегодня', 'text around two numbers preserved',
+        run(contactA, 'Звонить 84951234567 или 84957654321 сегодня', 'RU'));
+
+    // Extension bounds: 2..6 digits kept, 1 and 7 dropped (format() sees the ext directly)
+    const fmtRU = new ext.PhoneFormatter('RU');
+    ok(fmtRU.format('84951234567 ext. 1', 'contact') === '+74951234567', '1-digit ext dropped',
+        fmtRU.format('84951234567 ext. 1', 'contact'));
+    ok(fmtRU.format('84951234567 ext. 12', 'contact') === '+74951234567,12', '2-digit ext kept',
+        fmtRU.format('84951234567 ext. 12', 'contact'));
+    ok(fmtRU.format('84951234567 ext. 123456', 'contact') === '+74951234567,123456', '6-digit ext kept',
+        fmtRU.format('84951234567 ext. 123456', 'contact'));
+    ok(fmtRU.format('84951234567 ext. 1234567', 'contact') === '+74951234567', '7-digit ext dropped',
+        fmtRU.format('84951234567 ext. 1234567', 'contact'));
+
+    // NFKC: full-width digits reach the menu and format like ASCII ones.
+    ok(ext.actions({ text: '８４９５１２３４５６７' }, ALL_FORMATS) !== undefined,
+        'full-width digits show actions', '');
+    ok(run(contactA, '８４９５１２３４５６７', 'RU') === '+74951234567', 'full-width digits',
+        run(contactA, '８４９５１２３４５６７', 'RU'));
 
     // Multi-line: one number per line; non-phone lines pass through; empty lines kept
     ok(run(contactA, '84951234567\n84957654321', 'RU') === '+74951234567\n+74957654321',
@@ -308,6 +359,93 @@ ok(run(contactA, '84951234567, 12', 'RU') === '+74951234567,12',
         'multi-line passthrough', run(contactA, '84951234567\nnote to self', 'RU'));
     ok(run(contactA, '84951234567\n\n84957654321', 'RU') === '+74951234567\n\n+74957654321',
         'multi-line empty line kept', JSON.stringify(run(contactA, '84951234567\n\n84957654321', 'RU')));
+
+    // Bundle present but throwing: degrade to manual formatting, not to total rejection.
+    // Config.js and the test share one require-cache instance of the bundle.
+    // Self-proving pair: healthy lib rejects +7000…, crashed lib hands it to manual.
+    ok(run(contactA, '+70001234567', 'RU') === undefined, 'healthy lib rejects non-number',
+        run(contactA, '+70001234567', 'RU'));
+    const origParse = lib.parsePhoneNumber;
+    lib.parsePhoneNumber = () => { throw new Error('simulated bundle crash'); };
+    try {
+        ok(run(contactA, '84951234567', 'RU') === '+74951234567', 'lib-throws -> manual contact',
+            run(contactA, '84951234567', 'RU'));
+        ok(run(contactA, '+70001234567', 'RU') === '+70001234567', 'lib-throws -> manual takes over (proves fallback ran)',
+            run(contactA, '+70001234567', 'RU'));
+        ok(run(documentA, '84951234567', 'RU') === '+7 495 123 45 67', 'lib-throws -> manual document',
+            run(documentA, '84951234567', 'RU'));
+        ok(run(gostA, '+1 202 555 0134', 'RU') === undefined, 'lib-throws -> gost still rejects foreign',
+            run(gostA, '+1 202 555 0134', 'RU'));
+    } finally { lib.parsePhoneNumber = origParse; }
+
+    // findAll throws: the whole-number fallback path (comma list without lib scan)
+    const origFind = lib.findPhoneNumbersInText;
+    lib.findPhoneNumbersInText = () => { throw new Error('simulated finder crash'); };
+    try {
+        ok(run(contactA, '84951234567, 84957654321', 'RU') === '+74951234567, +74957654321',
+            'findAll-throws -> comma list via fallback', run(contactA, '84951234567, 84957654321', 'RU'));
+    } finally { lib.findPhoneNumbersInText = origFind; }
+
+    // Partial failure in a comma list: invalid entry dropped, valid one kept
+    ok(run(contactA, '84951234567, +7 999 123 456', 'RU') === '+74951234567, +7 999 123 456',
+        'partial-fail list keeps invalid entry untouched', run(contactA, '84951234567, +7 999 123 456', 'RU'));
+
+    // RU historic '87' trunk form: 12 digits, no area-code guard (unlike 77/78)
+    ok(run(contactA, '874951234567', 'RU') === '+74951234567',
+        'RU 87 legacy trunk (lib path)', run(contactA, '874951234567', 'RU'));
+
+    // GOST gate normalizes the country before comparing with 'RU'
+    ok(run(gostA, '+79001234567', 'ru') === '+7 (900) 123-45-67',
+        'gost gate accepts lowercase country', run(gostA, '+79001234567', 'ru'));
+
+    // CRLF line endings (Windows clipboard)
+    ok(run(contactA, '84951234567\r\n84957654321', 'RU') === '+74951234567\n+74957654321',
+        'CRLF multi-line', JSON.stringify(run(contactA, '84951234567\r\n84957654321', 'RU')));
+
+    // Web format joins multiple numbers (contact lists are covered, web was single-only).
+    // Note: comma-joined 'tel:' strings are documented behavior, not RFC 3966.
+    ok(run(webA, '84951234567, 84957654321', 'RU') === 'tel:+74951234567, tel:+74957654321',
+        'web format joins multiple numbers', run(webA, '84951234567, 84957654321', 'RU'));
+
+    // 5-digit extension survives in all modes (PBX ranges are real)
+    ok(run(contactA, '84951234567 ext. 12345', 'RU') === '+74951234567,12345',
+        'contact 5-digit ext', run(contactA, '84951234567 ext. 12345', 'RU'));
+
+    // Regex gate agrees with code(): every edge input that formats must also match
+    // PHONE_REGEX (otherwise PopClip hides a working action).
+    const extMod = require('../phone-formatter.popclipext/Config.js');
+    for (const edge of ['84951234567', '+7 900 123 45 67', '8 (495) 123-45-67', '(202) 555-0134',
+        '+44 20 7123 4567 ext. 12', '84951234567, 84957654321', '+49 30 12345678 доб. 12']) {
+        ok(extMod.PHONE_REGEX.test(edge), 'regex gate matches formatted input', edge);
+    }
+    // ...and the non-phone gate has two layers: the bare regex rejects only
+    // decimal-like strings; dates/IPs are rejected by isNonPhoneText at menu level.
+    ok(!extMod.PHONE_REGEX.test('3,14159'), 'regex rejects decimal', '3,14159');
+    for (const nonPhone of ['2024-01-15', '192.168.1.1', '3,14159']) {
+        ok(extMod.actions({ text: nonPhone }, ALL_FORMATS) === undefined,
+            'menu gate rejects non-phone', nonPhone);
+    }
+    ok(run(contactA, '1 234 567', 'RU') === undefined,
+        'ambiguous 7-digit string formats to nothing', run(contactA, '1 234 567', 'RU'));
+
+    // EXT_LABEL: bijection with the 42-country table, no missing/orphan labels
+    const countries = Object.keys(extMod.COUNTRY);
+    ok(countries.length === 42, '42 countries in table', countries.length);
+    ok(countries.every(c => typeof extMod.EXT_LABEL[c] === 'string' && extMod.EXT_LABEL[c]),
+        'every country has an ext label', countries.filter(c => !extMod.EXT_LABEL[c]).join(','));
+    ok(Object.keys(extMod.EXT_LABEL).every(c => extMod.COUNTRY[c]),
+        'no orphan ext labels', Object.keys(extMod.EXT_LABEL).filter(c => !extMod.COUNTRY[c]).join(','));
+
+    // Every EXT_KEYWORDS token parses the extension in document format
+    const kwBad = [];
+    for (const kw of ['extension', 'extn', 'durchwahl', 'добавочный', 'alanumero', 'vidinis',
+        'interno', 'anknr', 'poste', '内線', '分机', 'mellék', 'linka', 'wew', 'вт',
+        'iekš', 'lisa', 'ramal', 'ext', 'int', 'tst', 'lok', 'dahili', 'εσωτ', 'DW',
+        'App', 'lnr', 'доб', 'uitb', 'est']) {
+        const out = run(documentA, `+79001234567 ${kw} 12`, 'RU');
+        if (out !== '+7 900 123 45 67 доб. 12') kwBad.push(`${kw}:${out}`);
+    }
+    ok(kwBad.length === 0, 'all 30 EXT_KEYWORDS tokens parse', kwBad.slice(0, 3).join(' | '));
 }
 
 console.log(`\nPASS: ${pass}  FAIL: ${fail}`);
