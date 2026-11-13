@@ -35,7 +35,7 @@
 - ✅ Runtime output guard: strict E.164 / RFC 3966 check before paste
 - ✅ Modifier key: hold **Option (⌥)** on **Documents** to invert format (intl ↔ natl)
 - ✅ Format toggles in Settings: enable only the items you need (E.164, E.123, Web); a single enabled format skips the submenu. GOST appears only when the selection contains an RU number
-- ✅ Full manual fallback when the library rejects input
+- ✅ Manual fallback when the bundled library is missing or crashes (a library-valid rejection is final)
 
 ## Screenshots
 
@@ -86,52 +86,52 @@
 <details>
 <summary><strong>View all 42 countries</strong></summary>
 
-> Extension length is 2–6 digits for every country — one uniform limit enforced by the formatter.
+> Extension length is 1–6 digits for every country — one uniform limit enforced by the formatter.
 
 | Country | Code | National Length | Ext. Length |
 |---------|------|-----------------|-------------|
-| 🇷🇺 Russia | +7 | 10 | 2-6 |
-| 🇺🇸 United States | +1 | 10 | 2-6 |
-| 🇬🇧 United Kingdom | +44 | 9-11 | 2-6 |
-| 🇩🇪 Germany | +49 | 8-11 | 2-6 |
-| 🇫🇷 France | +33 | 9 | 2-6 |
-| 🇨🇳 China | +86 | 8, 10-11 | 2-6 |
-| 🇯🇵 Japan | +81 | 9-11 | 2-6 |
-| 🇰🇷 South Korea | +82 | 8-10 | 2-6 |
-| 🇧🇷 Brazil | +55 | 8, 10-11 | 2-6 |
-| 🇮🇳 India | +91 | 10 | 2-6 |
-| 🇦🇺 Australia | +61 | 9 | 2-6 |
-| 🇨🇦 Canada | +1 | 10 | 2-6 |
-| 🇲🇽 Mexico | +52 | 10-11 | 2-6 |
-| 🇮🇹 Italy | +39 | 9-11 | 2-6 |
-| 🇪🇸 Spain | +34 | 9 | 2-6 |
-| 🇳🇱 Netherlands | +31 | 8-9 | 2-6 |
-| 🇵🇱 Poland | +48 | 8-9 | 2-6 |
-| 🇹🇷 Turkey | +90 | 10 | 2-6 |
-| 🇹🇭 Thailand | +66 | 8-9 | 2-6 |
-| 🇸🇪 Sweden | +46 | 7-9 | 2-6 |
-| 🇳🇴 Norway | +47 | 8 | 2-6 |
-| 🇩🇰 Denmark | +45 | 8 | 2-6 |
-| 🇫🇮 Finland | +358 | 8-9 | 2-6 |
-| 🇦🇹 Austria | +43 | 8-13 | 2-6 |
-| 🇨🇭 Switzerland | +41 | 9 | 2-6 |
-| 🇧🇪 Belgium | +32 | 8-9 | 2-6 |
-| 🇮🇪 Ireland | +353 | 8-9 | 2-6 |
-| 🇵🇹 Portugal | +351 | 9 | 2-6 |
-| 🇬🇷 Greece | +30 | 10 | 2-6 |
-| 🇨🇿 Czech Republic | +420 | 9 | 2-6 |
-| 🇭🇺 Hungary | +36 | 8-9 | 2-6 |
-| 🇷🇴 Romania | +40 | 9 | 2-6 |
-| 🇧🇬 Bulgaria | +359 | 8-9 | 2-6 |
-| 🇭🇷 Croatia | +385 | 8-9 | 2-6 |
-| 🇸🇮 Slovenia | +386 | 8 | 2-6 |
-| 🇸🇰 Slovakia | +421 | 9 | 2-6 |
-| 🇱🇹 Lithuania | +370 | 8 | 2-6 |
-| 🇱🇻 Latvia | +371 | 8 | 2-6 |
-| 🇪🇪 Estonia | +372 | 7-8 | 2-6 |
-| 🇨🇾 Cyprus | +357 | 8 | 2-6 |
-| 🇲🇹 Malta | +356 | 8 | 2-6 |
-| 🇱🇺 Luxembourg | +352 | 8-9 | 2-6 |
+| 🇷🇺 Russia | +7 | 10 | 1-6 |
+| 🇺🇸 United States | +1 | 10 | 1-6 |
+| 🇬🇧 United Kingdom | +44 | 9-11 | 1-6 |
+| 🇩🇪 Germany | +49 | 8-11 | 1-6 |
+| 🇫🇷 France | +33 | 9 | 1-6 |
+| 🇨🇳 China | +86 | 8, 10-11 | 1-6 |
+| 🇯🇵 Japan | +81 | 9-11 | 1-6 |
+| 🇰🇷 South Korea | +82 | 8-10 | 1-6 |
+| 🇧🇷 Brazil | +55 | 8, 10-11 | 1-6 |
+| 🇮🇳 India | +91 | 10 | 1-6 |
+| 🇦🇺 Australia | +61 | 9 | 1-6 |
+| 🇨🇦 Canada | +1 | 10 | 1-6 |
+| 🇲🇽 Mexico | +52 | 10-11 | 1-6 |
+| 🇮🇹 Italy | +39 | 9-11 | 1-6 |
+| 🇪🇸 Spain | +34 | 9 | 1-6 |
+| 🇳🇱 Netherlands | +31 | 8-9 | 1-6 |
+| 🇵🇱 Poland | +48 | 8-9 | 1-6 |
+| 🇹🇷 Turkey | +90 | 10 | 1-6 |
+| 🇹🇭 Thailand | +66 | 8-9 | 1-6 |
+| 🇸🇪 Sweden | +46 | 7-9 | 1-6 |
+| 🇳🇴 Norway | +47 | 8 | 1-6 |
+| 🇩🇰 Denmark | +45 | 8 | 1-6 |
+| 🇫🇮 Finland | +358 | 8-9 | 1-6 |
+| 🇦🇹 Austria | +43 | 8-13 | 1-6 |
+| 🇨🇭 Switzerland | +41 | 9 | 1-6 |
+| 🇧🇪 Belgium | +32 | 8-9 | 1-6 |
+| 🇮🇪 Ireland | +353 | 8-9 | 1-6 |
+| 🇵🇹 Portugal | +351 | 9 | 1-6 |
+| 🇬🇷 Greece | +30 | 10 | 1-6 |
+| 🇨🇿 Czech Republic | +420 | 9 | 1-6 |
+| 🇭🇺 Hungary | +36 | 8-9 | 1-6 |
+| 🇷🇴 Romania | +40 | 9 | 1-6 |
+| 🇧🇬 Bulgaria | +359 | 8-9 | 1-6 |
+| 🇭🇷 Croatia | +385 | 8-9 | 1-6 |
+| 🇸🇮 Slovenia | +386 | 8 | 1-6 |
+| 🇸🇰 Slovakia | +421 | 9 | 1-6 |
+| 🇱🇹 Lithuania | +370 | 8 | 1-6 |
+| 🇱🇻 Latvia | +371 | 8 | 1-6 |
+| 🇪🇪 Estonia | +372 | 7-8 | 1-6 |
+| 🇨🇾 Cyprus | +357 | 8 | 1-6 |
+| 🇲🇹 Malta | +356 | 8 | 1-6 |
+| 🇱🇺 Luxembourg | +352 | 8-9 | 1-6 |
 
 </details>
 
@@ -166,7 +166,7 @@ Input → Clean & Parse Extension → libphonenumber-max (bundled, offline)
 3. If parsed but `isValid() = false` → reject (manual fallback is used only when the bundled library is unavailable)
 4. Format according to output type; strict regex guard for `contact`/`web`
 
-**Tests:** `make test` runs `test/phonefmt.test.js` — randomized conformance across the 42 offered countries (E.164 vs library, E.123/GOST non-empty, RFC 3966 shape).
+**Tests:** `make test` runs `test/phonefmt.test.js` — randomized conformance across the 42 offered countries (E.164 vs library, exact E.123/GOST and national format, RFC 3966 shape).
 
 </details>
 
@@ -209,7 +209,7 @@ Found a bug? Please [open an issue](https://github.com/nikolalek/PopClip-Extensi
 **Tooling:**
 - `strict` typecheck enabled (`noImplicitAny` stays off until the JS gets annotations)
 - `make jsc` runs Config.js in the real JavaScriptCore; new macOS CI job
-- Tests: 554 checks × 3 seeds + 42 fallback; deterministic country sampling for shared calling codes (+7 RU/KZ, +1 US/CA), extension-bound and output-guard mutation tests
+- Tests: 689 checks × 3 seeds + 59 fallback; deterministic country sampling for shared calling codes (+7 RU/KZ, +1 US/CA), extension-bound and output-guard mutation tests
 
 ### v2.6.4
 - **Fixed**: comma/semicolon-separated phone lists no longer drop every number after the first (libphonenumber mistook the next number for an extension)
@@ -218,7 +218,7 @@ Found a bug? Please [open an issue](https://github.com/nikolalek/PopClip-Extensi
 - **Fixed**: `VALID_CODES` back in sync with libphonenumber (`+211` South Sudan, `+247` Ascension added; phantoms removed)
 - **Changed**: GOST item icon `tabler:phone-spark`, label 🇷🇺
 - **Tooling**: `make install` / `make check-installed` to keep the locally installed copy in sync; `npm ci --ignore-scripts` in CI
-- **Tests**: 554 checks × 3 seeds + 42 fallback checks; Option-key flip, action-level input guard, multi-line behavior, in-place replacement, VALID_CODES sync
+- **Tests**: 689 checks × 3 seeds + 59 fallback checks; Option-key flip, action-level input guard, multi-line behavior, in-place replacement, VALID_CODES sync
 
 ### v2.6.3
 - **Fixed**: menu no longer appears for dates, IPv4 addresses, decimals, and thousands-separated numbers; a real phone after a date/IP/`/` is still detected

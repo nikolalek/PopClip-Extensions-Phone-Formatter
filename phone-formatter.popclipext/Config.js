@@ -4,13 +4,13 @@
 //   en: Phone Formatter
 //   de: Telefon-Formatierer
 //   fr: Formateur de Téléphone
-//   zh: 电话格式化器
+//   zh-Hans: 电话格式化器
 //   ja: 電話フォーマッター
 //   it: Formattatore Telefono
 //   es: Formateador de Teléfono
 //   nl: Telefoon Formatter
 //   pl: Formatter Telefonu
-//   pt-br: Formatador de Telefone
+//   pt-BR: Formatador de Telefone
 //   ko: 전화번호 포맷터
 //   vi: Định dạng Số điện thoại
 //   tr: Telefon Biçimleyici
@@ -23,13 +23,13 @@
 //   en: Format phone numbers with extensions to E.164, E.123, RFC 3966 standards
 //   de: Formatierung von Telefonnummern mit Nebenstellen nach E.164, E.123, RFC 3966
 //   fr: Formatage des numéros de téléphone avec extensions selon E.164, E.123, RFC 3966
-//   zh: 按照 E.164、E.123、RFC 3966 标准格式化带分机号的电话号码
+//   zh-Hans: 按照 E.164、E.123、RFC 3966 标准格式化带分机号的电话号码
 //   ja: E.164、E.123、RFC 3966 標準に従った内線番号付き電話番号のフォーマット
 //   it: Formattazione numeri telefono con interni secondo standard E.164, E.123, RFC 3966
 //   es: Formateo de números telefónicos con extensiones según estándares E.164, E.123, RFC 3966
 //   nl: Formattering van telefoonnummers met extensies volgens E.164, E.123, RFC 3966
 //   pl: Formatowanie numerów telefonów z wewnętrznymi według standardów E.164, E.123, RFC 3966
-//   pt-br: Formatação de números telefônicos com ramais conforme padrões E.164, E.123, RFC 3966
+//   pt-BR: Formatação de números telefônicos com ramais conforme padrões E.164, E.123, RFC 3966
 //   ko: E.164, E.123, RFC 3966 표준에 따른 내선 번호가 포함된 전화번호 형식 지정
 //   vi: Định dạng số điện thoại có số máy lẻ theo tiêu chuẩn E.164, E.123, RFC 3966
 //   tr: E.164, E.123, RFC 3966 standartlarına göre dahili numaralı telefon formatı
@@ -49,13 +49,13 @@
 //       en: Default Country
 //       de: Standard-Land
 //       fr: Pays par défaut
-//       zh: 默认国家
+//       zh-Hans: 默认国家
 //       ja: デフォルト国
 //       it: Paese predefinito
 //       es: País por defecto
 //       nl: Standaard land
 //       pl: Domyślny kraj
-//       pt-br: País padrão
+//       pt-BR: País padrão
 //       ko: 기본 국가
 //       vi: Quốc gia mặc định
 //       tr: Varsayılan ülke
@@ -71,13 +71,13 @@
 //       en: Document Format
 //       de: Dokumentformat
 //       fr: Format document
-//       zh: 文档格式
+//       zh-Hans: 文档格式
 //       ja: ドキュメント形式
 //       it: Formato documento
 //       es: Formato documento
 //       nl: Documentformaat
 //       pl: Format dokumentu
-//       pt-br: Formato documento
+//       pt-BR: Formato documento
 //       ko: 문서 형식
 //       vi: Định dạng
 //       tr: Belge biçimi
@@ -93,13 +93,13 @@
 //       en: E.164 (contact)
 //       de: E.164 (Kontakt)
 //       fr: E.164 (contact)
-//       zh: E.164（联系人）
+//       zh-Hans: E.164（联系人）
 //       ja: E.164（連絡先）
 //       it: E.164 (contatto)
 //       es: E.164 (contacto)
 //       nl: E.164 (contact)
 //       pl: E.164 (kontakt)
-//       pt-br: E.164 (contato)
+//       pt-BR: E.164 (contato)
 //       ko: E.164 (연락처)
 //       vi: E.164 (liên hệ)
 //       tr: E.164 (kişi)
@@ -113,13 +113,13 @@
 //       en: E.123 (document)
 //       de: E.123 (Dokument)
 //       fr: E.123 (document)
-//       zh: E.123（文档）
+//       zh-Hans: E.123（文档）
 //       ja: E.123（文書）
 //       it: E.123 (documento)
 //       es: E.123 (documento)
 //       nl: E.123 (document)
 //       pl: E.123 (dokument)
-//       pt-br: E.123 (documento)
+//       pt-BR: E.123 (documento)
 //       ko: E.123 (문서)
 //       vi: E.123 (tài liệu)
 //       tr: E.123 (belge)
@@ -133,13 +133,13 @@
 //       en: RFC 3966 (web)
 //       de: RFC 3966 (Web)
 //       fr: RFC 3966 (web)
-//       zh: RFC 3966（网页）
+//       zh-Hans: RFC 3966（网页）
 //       ja: RFC 3966（ウェブ）
 //       it: RFC 3966 (web)
 //       es: RFC 3966 (web)
 //       nl: RFC 3966 (web)
 //       pl: RFC 3966 (sieć)
-//       pt-br: RFC 3966 (web)
+//       pt-BR: RFC 3966 (web)
 //       ko: RFC 3966 (웹)
 //       vi: RFC 3966 (web)
 //       tr: RFC 3966 (web)
@@ -250,32 +250,30 @@ const EXT_LABEL = {
 
 // Single source of truth for extension keywords (longer words first where one
 // is a prefix of another). Used by EXT_PATTERNS, PHONE_PATTERN, and findAll.
-const EXT_KEYWORDS = String.raw`extension|extn|durchwahl|добавочный|alanumero|vidinis|interno|anknr|poste|内線|分机|mellék|linka|wew\.?|вт\.?|iekš\.?|lisa|ramal|ext\.?|int\.?|tst\.?|lok\.?|dahili|εσωτ\.?|DW|App\.?|lnr|доб\.?|uitb\.?|est\.?`;
+const EXT_KEYWORDS = String.raw`extension|extn|durchwahl|добавочный|alanumero|vidinis|interno|anknr|poste|内線|내선|分机|ต่อ|mellék|linka|wew\.?|вт\.?|iekš\.?|lisa|ramal|ext\.?|int\.?|tst\.?|lok\.?|dahili|εσωτ\.?|DW|App\.?|lnr|доб\.?|uitb\.?|est\.?`;
+
+// One closing-bracket rule for every extension grammar: parse, scan, and menu.
+// They used to diverge (")" only), which hid the menu for "[123 ext. 4]".
+const EXT_CLOSE = String.raw`[)\]}]*`;
 
 const EXT_PATTERNS = [
     /^tel:([+\d\-\(\)\s]+);ext(?:ension)?=(\d+)$/i,
-    /^(.+?)\s*[,;]\s*ext(?:ension)?\s*=\s*(\d+)\)?$/i,
-    /(.+?)[,;]\s*(\d+)\)?$/,
-    new RegExp(String.raw`(.+?)\s+\(?\s*(?:${EXT_KEYWORDS})\s*[:=]?\s*(\d+)\)?$`, 'i'),
-    /(.+?)\s*[x#*]\s*(\d+)\)?$/i
+    new RegExp(String.raw`^(.+?)\s*[,;]\s*ext(?:ension)?\s*=\s*(\d+)${EXT_CLOSE}$`, 'i'),
+    new RegExp(String.raw`(.+?)[,;]\s*(\d+)${EXT_CLOSE}$`),
+    new RegExp(String.raw`(.+?)\s+\(?\s*(?:${EXT_KEYWORDS})\s*[:=]?\s*(\d+)${EXT_CLOSE}$`, 'i'),
+    new RegExp(String.raw`(.+?)\s*[x#*]\s*(\d+)${EXT_CLOSE}$`, 'i'),
+    // Bare parenthesized extension: "8 495 123-45-67 (123)".
+    new RegExp(String.raw`^(.+?)\s+\(\s*(\d{1,6})\s*\)${EXT_CLOSE}$`)
 ];
 
 // Date-, IP-, decimal-, and thousands-like strings are not phones.
-const PHONE_PATTERN = String.raw`(?:tel:)?(?:(?:\+?\d|\(\+?\d)[\d\s\-\(\)\.\/]{5,}\d)(?:\s*(?:;ext(?:ension)?=|(?:\s*[,;]\s*|\s+)(?:${EXT_KEYWORDS}|#|x)\s*[:=]?\s*|\s*[,;]\s*[:=]?\s*|["']?[x#*]\s*)\d{2,6}(?![\d.\/]))?`;
+// IPv4 octets are bounded to 0-255 so dotted phones like 8495.123.45.67 still format.
+const OCTET = String.raw`(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)`;
+const PHONE_PATTERN = String.raw`(?:tel:)?(?:(?:\+?\d|\(\+?\d)[\d\s\-\(\)\.\/]{5,}\d)(?:\s*(?:(?:;ext(?:ension)?=|(?:\s*[,;]\s*|\s+)\(?\s*(?:${EXT_KEYWORDS}|#|x)\s*[:=]?\s*|\s*[,;]\s*[:=]?\s*|["']?[x#*]\s*)\d{1,6}${EXT_CLOSE}))?(?![\d.\/])`;
 const PHONE_REGEX = new RegExp(PHONE_PATTERN, 'i');
-const NON_PHONE_TEXT = /^(?:tel:)?\s*(?:(?:\d{1,4}\.){3}\d{1,4}|(?:\d{1,4}\.){5,}\d{1,4}|\d{1,4}[-.\/]\d{1,2}[-.\/]\d{1,4}|\d{1,3}(?:[.\/]\d{3})+|\+?\d{1,6}[.\/]\d{1,6})$/i;
+const NON_PHONE_TEXT = new RegExp(String.raw`^(?:tel:)?\s*(?:(?:${OCTET}\.){3}${OCTET}|(?:\d{1,4}\.){5,}\d{1,4}|\d{1,4}[-.\/]\d{1,2}[-.\/]\d{1,4}|\d{1,3}(?:[.\/]\d{3})+|\+?\d{1,6}[.\/]\d{1,6})$`, 'i');
 const isNonPhoneText = (value) => NON_PHONE_TEXT.test(String(value).replace(/\s+/g, ''));
 const digitCount = (value) => (String(value).match(/\d/g) || []).length;
-
-function hasPhoneMatch(text) {
-    const regex = new RegExp(PHONE_REGEX.source, 'gi');
-    let match;
-    while ((match = regex.exec(text)) !== null) {
-        if (digitCount(match[0]) < MIN_PHONE_DIGITS || isNonPhoneText(match[0])) continue;
-        return true;
-    }
-    return false;
-}
 
 const MIN_PHONE_DIGITS = 7;
 const MAX_INPUT_LENGTH = 4096;
@@ -286,7 +284,7 @@ const normalizeText = (value) => String(value ?? '').normalize('NFKC');
 
 // Unknown country values must behave the same in the menu and the formatter.
 function normalizeCountry(value) {
-    const country = String(value || DEFAULT_COUNTRY).toUpperCase();
+    const country = String(value || DEFAULT_COUNTRY).trim().toUpperCase();
     return COUNTRY[country] ? country : DEFAULT_COUNTRY;
 }
 
@@ -323,18 +321,19 @@ class PhoneFormatter {
     // Runtime guard: strict specs get strict validation before paste.
     // contact = E.164 (max 15 digits), web = RFC 3966 tel URI.
     #isValidOutput(out, type) {
-        if (type === 'contact') return /^\+[1-9]\d{6,14}(,\d{2,6})?$/.test(out);
-        if (type === 'web') return /^tel:\+[1-9]\d{6,14}(;ext=\d{2,6})?$/.test(out);
+        if (type === 'contact') return /^\+[1-9]\d{6,14}(,\d{1,6})?$/.test(out);
+        if (type === 'web') return /^tel:\+[1-9]\d{6,14}(;ext=\d{1,6})?$/.test(out);
         return true;
     }
 
-    // Numbers are replaced where they stand: surrounding text and list
-    // separators survive. Nothing formattable means no action (PopClip stays silent).
+    // Numbers are replaced where they stand: surrounding text, list separators
+    // and line endings survive. Nothing formattable means no action (silent).
     formatMultiple(input, type) {
         let formatted = false;
-        const lines = input.split(/\r?\n/).map(line => {
-            const text = line.trim();
-            if (!text) return '';
+        const lines = input.split(/(\r?\n)/);
+        for (let i = 0; i < lines.length; i += 2) {
+            const text = lines[i];
+            if (!/\d/.test(text)) continue;
             let result = text;
             let shift = 0;
             for (const number of PhoneParser.findAll(text, this.#country)) {
@@ -348,13 +347,15 @@ class PhoneFormatter {
                 result = result.slice(0, start + shift) + value + result.slice(number.endsAt + shift);
                 shift += value.length - original.length;
             }
-            return result;
-        });
-        return formatted ? lines.join('\n') : '';
+            lines[i] = result;
+        }
+        return formatted ? lines.join('') : '';
     }
 
     #toE164(num) {
-        let clean = num.replace(/[^\d+]/g, '').replace(/^[+]+/, '+');
+        // A '+' is only valid at the front: "+7+495..." is a double paste, not a number.
+        let clean = num.replace(/[^\d+]/g, '');
+        clean = clean.startsWith('+') ? '+' + clean.slice(1).replace(/\+/g, '') : clean.replace(/\+/g, '');
 
         if (/^00\d+$/.test(clean)) {
             const plus = '+' + clean.slice(2);
@@ -427,7 +428,8 @@ class PhoneFormatter {
         }
 
         if (this.#country === 'US' || this.#country === 'CA') {
-            if (clean.length === 10) return '+1' + clean;
+            // 10-digit NSN must not start with the trunk digit: "1202555013" is not +1 120...
+            if (clean.length === 10) return clean.startsWith('1') ? null : '+1' + clean;
             if (clean.length === 11 && clean.startsWith('1')) return '+' + clean;
         }
 
@@ -528,7 +530,7 @@ class PhoneFormatter {
     #formatExtension(ext, type) {
         if (!ext) return '';
         const digits = String(ext).replace(/[^\d]/g, '');
-        if (digits.length < 2 || digits.length > 6) return '';
+        if (digits.length < 1 || digits.length > 6) return '';
         switch (type) {
             case 'contact': return `,${digits}`;
             case 'document': return ` ${this.#extLabel} ${digits}`;
@@ -557,6 +559,7 @@ class PhoneParser {
         }
         text = text.replace(/\s*\(\d\)\s*$/, '')
             .replace(/\s*[\(\[\{][^0-9+\)\]\}]*[\)\]\}]\s*/g, ' ')
+            .replace(/^[)\]}]+|[)\]}]+$/g, '')
             .replace(/\s+/g, ' ').trim();
         if (isTel && text.toLowerCase().startsWith('tel:')) text = text.slice(4).trim();
         return { main: text, ext: foundExt };
@@ -570,13 +573,45 @@ class PhoneParser {
                 // list as a bogus extension (>6 digits); rescanning manually handles lists.
                 const bogusExt = found.some(item =>
                     (String(item.number?.ext || '').match(/\d/g) || []).length > 6);
-                if (found.length && !bogusExt) return found.map(item => {
+                // libphonenumber also "finds" dates and decimals in some countries;
+                // such spans must never be reformatted. A date can absorb the next
+                // item as its "extension" ("21.01.2026, 22"), so check the head too.
+                const usable = found.filter(item => {
+                    const span = text.substring(item.startsAt, item.endsAt);
+                    return !isNonPhoneText(span) && !isNonPhoneText(span.split(/[,;]/)[0]);
+                });
+                if (usable.length && !bogusExt) return usable.map(item => {
                     let s = item.startsAt, e = item.endsAt;
                     if (s >= 4 && text.substring(s - 4, s).toLowerCase() === 'tel:') s -= 4;
-                    const after = text.substring(e, e + 30);
-                    const extMatch = after.match(new RegExp(String.raw`^(?:;ext(?:ension)?=\s*|["']?\s*(?:[,;]\s*[:=]?\s*|\s+)\(?\s*(?:${EXT_KEYWORDS}|[x#*])\s*[:=]?\s*|["']?\s*[,;]\s*[:=]?\s*|["']?[x#*]\s*)(\d{2,6})\)?`, 'i'));
-                    if (extMatch) e += extMatch[0].length;
-                    return { number: item.number?.number || '', startsAt: s, endsAt: e, ext: item.number?.ext || extMatch?.[1] || null, originalText: text.substring(s, e) };
+                    // lib can start a span on the separator before the number.
+                    while (s < e && /\s/.test(text[s])) s++;
+                    // "+7+495..." (double paste): lib starts on the second '+'.
+                    const plus = text.lastIndexOf('+', s - 1);
+                    if (plus !== -1 && /^\d+$/.test(text.slice(plus + 1, s)) &&
+                        (plus === 0 || !/\d/.test(text[plus - 1]))) s = plus;
+                    const OPEN = { '[': ']', '(': ')', '{': '}' };
+                    // The library already parsed an extension into the number; scanning
+                    // again would swallow the next number of a list (", 8 495 ...").
+                    let ext = item.number?.ext ? String(item.number.ext) : null;
+                    if (!ext) {
+                        const close = /^[)\]}]+/.test(text.substring(e)) ? text.substring(e).match(/^[)\]}]+/)[0].length : 0;
+                        const after = text.substring(e + close, e + close + 30);
+                        const extMatch = after.match(new RegExp(String.raw`^(?:(?:;ext(?:ension)?=|["']?\s*(?:[,;]\s*[:=]?\s*|\s+)\(?\s*(?:${EXT_KEYWORDS}|[x#*])\s*[:=]?\s*|["']?\s*[,;]\s*[:=]?\s*|["']?[x#*]\s*)(\d{1,6})${EXT_CLOSE}|\s*\(\s*(\d{1,6})\s*\))`, 'i'));
+                        if (extMatch) { e += close + extMatch[0].length; ext = extMatch[1] || extMatch[2]; }
+                    }
+                    // A pair wraps this number only when its opener touches the span
+                    // and its closer is at the span edge (or already inside it).
+                    const pairAt = (at) => {
+                        const closer = at >= 0 ? OPEN[text[at]] : undefined;
+                        if (!closer) return -1;
+                        if (text[e] === closer) { e++; return at; }
+                        if (text.slice(at + 1, e).includes(closer)) return at;
+                        return -1;
+                    };
+                    const opened = [s - 1, s].map(pairAt).find(at => at >= 0);
+                    if (opened !== undefined) s = opened;
+                    else if (OPEN[text[s]]) s++;
+                    return { number: item.number?.number || '', startsAt: s, endsAt: e, ext, originalText: text.substring(s, e) };
                 });
             } catch { }
         }
@@ -585,9 +620,13 @@ class PhoneParser {
             const { main, ext } = this.parse(raw);
             results.push({ number: main, startsAt: at, endsAt: at + raw.length, ext, originalText: raw });
         };
+        // A '+' inside a number ("+7+495...") is a double paste. Mask it as a space
+        // so the scanner sees one span; #toE164 removes it from the real text.
+        const scan = text.replace(/\+/g, (m, at, whole) =>
+            at > 0 && /\d/.test(whole[at - 1]) && /\d/.test(whole[at + 1]) ? ' ' : '+');
         const regex = new RegExp(PHONE_REGEX.source, 'gi');
         let match;
-        while ((match = regex.exec(text)) !== null) {
+        while ((match = regex.exec(scan)) !== null) {
             if (digitCount(match[0]) < MIN_PHONE_DIGITS || isNonPhoneText(match[0])) continue;
             // Slash is both a digit separator (+7/495/...) and a list separator.
             // Split only when every slash-separated chunk is a full number.
@@ -595,14 +634,33 @@ class PhoneParser {
             const chunkRe = /[^\/]+/g;
             let chunkMatch;
             while ((chunkMatch = chunkRe.exec(match[0])) !== null) {
-                const text = chunkMatch[0].trim();
-                if (/\d/.test(text)) chunks.push({ text, at: match.index + chunkMatch.index + chunkMatch[0].indexOf(text) });
+                const chunk = chunkMatch[0].trim();
+                if (/\d/.test(chunk)) chunks.push({ text: chunk, at: match.index + chunkMatch.index + chunkMatch[0].indexOf(chunk) });
             }
-            if (chunks.length > 1 && chunks.every(chunk => this.hasEnoughDigits(chunk.text))) {
-                for (const chunk of chunks) add(chunk.text, chunk.at);
+            if (chunks.length > 1 && chunks.every(item => this.hasEnoughDigits(item.text))) {
+                for (const item of chunks) add(item.text, item.at);
                 continue;
             }
             add(match[0], match.index);
+        }
+        // A bare parenthesized extension is swallowed up to its digits; take the ")".
+        for (const item of results) {
+            if (text[item.endsAt] !== ')' || !/\(\s*\d{1,6}$/.test(item.originalText)) continue;
+            item.endsAt++;
+            const parsed = this.parse(text.slice(item.startsAt, item.endsAt));
+            item.number = parsed.main;
+            item.ext = parsed.ext;
+            item.originalText = text.slice(item.startsAt, item.endsAt);
+        }
+        // Same bracket rule as the lib path: a matched pair belongs to the span.
+        const OPEN = { '[': ']', '(': ')', '{': '}' };
+        for (const item of results) {
+            const closer = OPEN[text[item.startsAt - 1]];
+            if (!closer) continue;
+            if (text[item.endsAt] === closer) { item.startsAt--; item.endsAt++; }
+            else if (text[item.endsAt - 1] === closer) item.startsAt--;
+            else continue;
+            item.originalText = text.slice(item.startsAt, item.endsAt);
         }
         return results;
     }
@@ -613,10 +671,10 @@ class PhoneParser {
 }
 
 const ACTION_TITLES = {
-    contact: { ru: "📱 Контакты", en: "📱 Contacts", de: "📱 Kontakte", fr: "📱 Contacts", zh: "📱 联系人", ja: "📱 連絡先", it: "📱 Contatti", es: "📱 Contactos", nl: "📱 Contacten", pl: "📱 Kontakty", "pt-br": "📱 Contatos", ko: "📱 연락처", vi: "📱 Danh bạ", tr: "📱 Kişiler", sk: "📱 Kontakty", da: "📱 Kontakter" },
-    document: { ru: "📄 Документы", en: "📄 Documents", de: "📄 Dokumente", fr: "📄 Documents", zh: "📄 文档", ja: "📄 文書", it: "📄 Documenti", es: "📄 Documentos", nl: "📄 Documenten", pl: "📄 Dokumenty", "pt-br": "📄 Documentos", ko: "📄 문서", vi: "📄 Tài liệu", tr: "📄 Belgeler", sk: "📄 Dokumenty", da: "📄 Dokumenter" },
-    gost: { ru: "🇷🇺 ГОСТ", en: "🇷🇺 GOST", de: "🇷🇺 GOST", fr: "🇷🇺 GOST", zh: "🇷🇺 ГОСТ", ja: "🇷🇺 GOST", it: "🇷🇺 GOST", es: "🇷🇺 GOST", nl: "🇷🇺 GOST", pl: "🇷🇺 GOST", "pt-br": "🇷🇺 GOST", ko: "🇷🇺 GOST", vi: "🇷🇺 GOST", tr: "🇷🇺 GOST", sk: "🇷🇺 GOST", da: "🇷🇺 GOST" },
-    web: { ru: "🌐 Веб", en: "🌐 Web", de: "🌐 Web", fr: "🌐 Web", zh: "🌐 网页", ja: "🌐 ウェブ", it: "🌐 Web", es: "🌐 Web", nl: "🌐 Web", pl: "🌐 Sieć", "pt-br": "🌐 Web", ko: "🌐 웹", vi: "🌐 Web", tr: "🌐 Web", sk: "🌐 Web", da: "🌐 Web" }
+    contact: { ru: "📱 Контакты", en: "📱 Contacts", de: "📱 Kontakte", fr: "📱 Contacts", "zh-Hans": "📱 联系人", ja: "📱 連絡先", it: "📱 Contatti", es: "📱 Contactos", nl: "📱 Contacten", pl: "📱 Kontakty", "pt-BR": "📱 Contatos", ko: "📱 연락처", vi: "📱 Danh bạ", tr: "📱 Kişiler", sk: "📱 Kontakty", da: "📱 Kontakter" },
+    document: { ru: "📄 Документы", en: "📄 Documents", de: "📄 Dokumente", fr: "📄 Documents", "zh-Hans": "📄 文档", ja: "📄 文書", it: "📄 Documenti", es: "📄 Documentos", nl: "📄 Documenten", pl: "📄 Dokumenty", "pt-BR": "📄 Documentos", ko: "📄 문서", vi: "📄 Tài liệu", tr: "📄 Belgeler", sk: "📄 Dokumenty", da: "📄 Dokumenter" },
+    gost: { ru: "🇷🇺 ГОСТ", en: "🇷🇺 GOST", de: "🇷🇺 GOST", fr: "🇷🇺 GOST", "zh-Hans": "🇷🇺 ГОСТ", ja: "🇷🇺 GOST", it: "🇷🇺 GOST", es: "🇷🇺 GOST", nl: "🇷🇺 GOST", pl: "🇷🇺 GOST", "pt-BR": "🇷🇺 GOST", ko: "🇷🇺 GOST", vi: "🇷🇺 GOST", tr: "🇷🇺 GOST", sk: "🇷🇺 GOST", da: "🇷🇺 GOST" },
+    web: { ru: "🌐 Веб", en: "🌐 Web", de: "🌐 Web", fr: "🌐 Web", "zh-Hans": "🌐 网页", ja: "🌐 ウェブ", it: "🌐 Web", es: "🌐 Web", nl: "🌐 Web", pl: "🌐 Sieć", "pt-BR": "🌐 Web", ko: "🌐 웹", vi: "🌐 Web", tr: "🌐 Web", sk: "🌐 Web", da: "🌐 Web" }
 };
 
 const ACTION_ICONS = {
@@ -670,15 +728,19 @@ function enabledFormats(options, text) {
 
 function populateActions(input, options) {
     const text = normalizeText(input?.text);
-    if (text.length > MAX_INPUT_LENGTH || isNonPhoneText(text) || !hasPhoneMatch(text)) return;
+    if (text.length > MAX_INPUT_LENGTH) return;
+    const country = normalizeCountry(options?.country);
+    // Gate on "can this actually be formatted?", not on "does it look like digits":
+    // dates, times and IPs otherwise produce menu items that all return null.
+    if (new PhoneFormatter(country, 'intl').formatMultiple(text, 'contact') === '') return;
     const enabled = enabledFormats(options, text);
     if (!enabled.length) return;
     if (enabled.length === 1) return makeAction(enabled[0]);
     return [{
         title: {
             ru: "📞 Телефон", en: "📞 Phone", de: "📞 Telefon", fr: "📞 Téléphone",
-            zh: "📞 电话", ja: "📞 電話", it: "📞 Telefono", es: "📞 Teléfono",
-            nl: "📞 Telefoon", pl: "📞 Telefon", "pt-br": "📞 Telefone", ko: "📞 전화",
+            "zh-Hans": "📞 电话", ja: "📞 電話", it: "📞 Telefono", es: "📞 Teléfono",
+            nl: "📞 Telefoon", pl: "📞 Telefon", "pt-BR": "📞 Telefone", ko: "📞 전화",
             vi: "📞 Điện thoại", tr: "📞 Telefon", sk: "📞 Telefón", da: "📞 Telefon"
         },
         icon: "iconify:tabler:phone-check",
@@ -692,6 +754,7 @@ module.exports = {
     VALID_CODES,
     COUNTRY,
     EXT_LABEL,
+    EXT_KEYWORDS,
     PHONE_REGEX,
     PhoneFormatter,
     PhoneParser

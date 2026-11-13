@@ -19,8 +19,8 @@ const ok = (cond, label, detail) => {
     else { fail++; console.log(`FAIL ${label} :: ${detail}`); }
 };
 
-const actions = (country) => ext.actions(
-    { text: '84951234567' },
+const actions = (country, text = '84951234567') => ext.actions(
+    { text },
     { country, docFormat: 'intl', showContact: true, showDocument: true, showWeb: true }
 ).reduce((acc, item) => acc.concat(item.submenu || [item]), []);
 
@@ -29,7 +29,7 @@ const out = (list, index, text, country) => list[index].code({ text }, { country
 
 ok(out(ru, 0, '84951234567', 'RU') === '+74951234567', 'no-lib RU contact', '');
 ok(out(ru, 1, '84951234567', 'RU') === '+7 495 123 45 67', 'no-lib RU document', '');
-ok(out(actions('US'), 0, '(202) 555-0134', 'US') === '+12025550134', 'no-lib US contact', '');
+ok(out(actions('US', '2025550134'), 0, '(202) 555-0134', 'US') === '+12025550134', 'no-lib US contact', '');
 ok(out(ru, 2, '84951234567', 'RU').startsWith('+7 ('), 'no-lib RU gost', '');
 // GOST is RU-only in the no-lib path too (regression: lib guard must not diverge)
 ok(out(ru, 2, '+1 202 555 0134', 'RU') === undefined, 'no-lib gost rejects US number',
@@ -76,33 +76,69 @@ ok(runOn('84951234567;84957654321', 'RU', 0) === '+74951234567;+74957654321',
     'no-lib semicolon list', runOn('84951234567;84957654321', 'RU', 0));
 ok(runOn('84951234567 добавочный 12', 'RU', 0) === '+74951234567,12',
     'no-lib добавочный ext', runOn('84951234567 добавочный 12', 'RU', 0));
+// Brackets and bare parenthesis extensions behave like the lib path.
+for (const [open, close] of [['[', ']'], ['(', ')'], ['{', '}']]) {
+    const wrapped = `${open}84951234567 ext. 12${close}`;
+    ok(runOn(wrapped, 'RU', 0) === '+74951234567,12',
+        `no-lib wrapped ext ${open}`, runOn(wrapped, 'RU', 0));
+    ok(runOn(wrapped, 'RU', 1) === '+7 495 123 45 67 доб. 12',
+        `no-lib wrapped ext document ${open}`, runOn(wrapped, 'RU', 1));
+}
+ok(runOn('84951234567 (123)', 'RU', 0) === '+74951234567,123',
+    'no-lib bare paren ext', runOn('84951234567 (123)', 'RU', 0));
+ok(runOn('84951234567 (123), 84957654321', 'RU', 0) === '+74951234567,123, +74957654321',
+    'no-lib bare paren ext keeps separator', runOn('84951234567 (123), 84957654321', 'RU', 0));
+ok(runOn('[84951234567 (123)]', 'RU', 0) === '+74951234567,123',
+    'no-lib bare paren ext inside brackets', runOn('[84951234567 (123)]', 'RU', 0));
+ok(runOn('+7+4951234567', 'RU', 0) === '+74951234567',
+    'no-lib stray plus', runOn('+7+4951234567', 'RU', 0));
+ok(runOn('Тел: +351969703202', 'PT', 0) === 'Тел: +351969703202',
+    'no-lib space before span kept', runOn('Тел: +351969703202', 'PT', 0));
 // #isValidOutput: the manual path can produce >15 digits (+998 + 14); the spec
 // guard must reject it instead of pasting an invalid E.164 / tel URI.
 {
     const overlong = '+99812345678901234';
-    const list = forText(overlong, 'RU');
-    const opts = { country: 'RU', docFormat: 'intl' };
-    ok(list[0].code({ text: overlong }, opts) === undefined, 'no-lib contact rejects >15 digits',
-        list[0].code({ text: overlong }, opts));
-    ok(list[2].code({ text: overlong }, opts) === undefined, 'no-lib web rejects >15 digits',
-        list[2].code({ text: overlong }, opts));
+    const fmt = new ext.PhoneFormatter('RU', 'intl');
+    ok(fmt.format(overlong, 'contact') === null, 'no-lib contact rejects >15 digits',
+        fmt.format(overlong, 'contact'));
+    ok(fmt.format(overlong, 'web') === null, 'no-lib web rejects >15 digits',
+        fmt.format(overlong, 'web'));
     // Control: 15 digits is the E.164 maximum and must still pass.
     const max = '+998123456789012';
-    ok(forText(max, 'RU')[0].code({ text: max }, opts) === max, 'no-lib accepts 15 digits',
-        forText(max, 'RU')[0].code({ text: max }, opts));
+    ok(fmt.format(max, 'contact') === max, 'no-lib accepts 15 digits', fmt.format(max, 'contact'));
 }
 ok(runOn('84951234567 extension 12', 'RU', 0) === '+74951234567,12',
     'no-lib extension ext', runOn('84951234567 extension 12', 'RU', 0));
-ok(runOn('+7 999 123 456', 'RU', 0) === undefined, 'no-lib rejects invalid RU', '');
-ok(runOn('+1234567890123456', 'RU', 0) === undefined, 'no-lib rejects overlong', '');
+const noMenu = (text, country) => ext.actions(
+    { text },
+    { country, docFormat: 'intl', showContact: true, showDocument: true, showWeb: true }
+) === undefined;
+
+ok(noMenu('+7 999 123 456', 'RU'), 'no-lib rejects invalid RU', '');
+ok(noMenu('+1234567890123456', 'RU'), 'no-lib rejects overlong', '');
 // fixedLength guards: RU/US strip the trunk prefix only for exact-10-digit nationals
-ok(runOn('84951234', 'RU', 0) === undefined, 'no-lib RU rejects short trunk (fixedLength)',
-    runOn('84951234', 'RU', 0));
-ok(runOn('1202555013', 'US', 0) === '+11202555013', 'no-lib US strips 1 only before 10 digits (fixedLength)',
-    runOn('1202555013', 'US', 0));
+ok(noMenu('84951234', 'RU'), 'no-lib RU rejects short trunk (fixedLength)', '');
+// A US NSN cannot start with the trunk digit 1: "1202555013" used to become +11202555013.
+ok(noMenu('1202555013', 'US'), 'no-lib US rejects NSN starting with 1', '');
 // 5-6 digit extension survives in the manual path too
 ok(runOn('84951234567 ext. 12345', 'RU', 0) === '+74951234567,12345',
     'no-lib 5-digit ext', runOn('84951234567 ext. 12345', 'RU', 0));
+// Parenthesized extension: PHONE_PATTERN used to miss "(доб. 2)" in the manual path.
+ok(runOn('+7(800)500-42-15 (доб. 2)', 'RU', 0) === '+78005004215,2',
+    'no-lib parenthesized ext', runOn('+7(800)500-42-15 (доб. 2)', 'RU', 0));
+ok(runOn('+7(800)500-42-15 (доб. 2)', 'RU', 3) === 'tel:+78005004215;ext=2',
+    'no-lib parenthesized ext web', runOn('+7(800)500-42-15 (доб. 2)', 'RU', 3));
+ok(runOn('84951234567 ext. 1', 'RU', 0) === '+74951234567,1',
+    'no-lib 1-digit ext', runOn('84951234567 ext. 1', 'RU', 0));
+ok(runOn('84951234567;ext=1', 'RU', 0) === '+74951234567,1',
+    'no-lib ;ext= 1-digit ext', runOn('84951234567;ext=1', 'RU', 0));
+// Dotted numbers are phones, not IPv4: the manual menu must not hide them.
+ok(ext.actions({ text: '8495.123.45.67' },
+    { country: 'RU', docFormat: 'intl', showContact: true, showDocument: true, showWeb: true }) !== undefined,
+    'no-lib dotted number shows actions', '');
+ok(ext.actions({ text: '192.168.1.1' },
+    { country: 'RU', docFormat: 'intl', showContact: true, showDocument: true, showWeb: true }) === undefined,
+    'no-lib IPv4 still hidden', '');
 ok(runNatl('+49 30 12345678', 'DE') === '03012345678', 'no-lib DE natl trunk', runNatl('+49 30 12345678', 'DE'));
 ok(runNatl('+44 20 7123 4567', 'GB') === '02071234567', 'no-lib GB natl trunk', runNatl('+44 20 7123 4567', 'GB'));
 ok(runNatl('+36 1 234 5678', 'HU') === '0612345678', 'no-lib HU natl 06 trunk', runNatl('+36 1 234 5678', 'HU'));
