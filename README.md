@@ -205,72 +205,22 @@ Found a bug? Please [open an issue](https://github.com/nikolalek/PopClip-Extensi
 - Formatting no longer discards the text around a number: `Звонить 84951234567 сегодня` → `Звонить +74951234567 сегодня`; list separators stay as typed (`/`, `;`, `,`)
 - GOST menu item is hidden when the selection has no RU-formattable number; a foreign number under RU country used to show a dead item
 - Full-width digits (`８４９５…`) are normalized (NFKC) before matching
+- Number lists with extensions no longer lose the first number (`84951234567 ext. 12, 84957654321` formats both)
+- Brackets and parentheses around a number are consumed as a pair instead of being half-deleted
+- The menu appears only when the selection actually formats: dates, times and IPs no longer produce dead items; dotted numbers (`8495.123.45.67`) show it again
+- Whitespace, indentation and CRLF line endings around numbers are preserved as typed
+- Korean `내선` and Thai `ต่อ` are recognised, so document output can be re-parsed; locale keys fixed to `pt-BR` / `zh-Hans`
+- Manual fallback: parenthesized and 1-digit extensions work, US numbers starting with `1` are rejected
+- All bracket types (`[]`, `{}`, `()`) that wrap an extension behave the same: `[84951234567 ext. 12]` no longer hides the menu and `{…}` no longer leaks braces into the output
+- A bare parenthesized extension (`8 495 123-45-67 (123)`) is recognised in both the library and manual paths
+- A stray `+` inside a number (`+7+4951234567`) is removed instead of passing through unchanged; a space before the number is kept
 
 **Tooling:**
 - `strict` typecheck enabled (`noImplicitAny` stays off until the JS gets annotations)
 - `make jsc` runs Config.js in the real JavaScriptCore; new macOS CI job
 - Tests: 689 checks × 3 seeds + 59 fallback; deterministic country sampling for shared calling codes (+7 RU/KZ, +1 US/CA), extension-bound and output-guard mutation tests
 
-### v2.6.4
-- **Fixed**: comma/semicolon-separated phone lists no longer drop every number after the first (libphonenumber mistook the next number for an extension)
-- **Fixed**: extension keywords unified into one source list — `добавочный` and `extension` no longer lost in some paths
-- **Fixed**: manual fallback (library unavailable) national format keeps the trunk prefix (e.g. DE `03012345678`)
-- **Fixed**: `VALID_CODES` back in sync with libphonenumber (`+211` South Sudan, `+247` Ascension added; phantoms removed)
-- **Changed**: GOST item icon `tabler:phone-spark`, label 🇷🇺
-- **Tooling**: `make install` / `make check-installed` to keep the locally installed copy in sync; `npm ci --ignore-scripts` in CI
-- **Tests**: 689 checks × 3 seeds + 59 fallback checks; Option-key flip, action-level input guard, multi-line behavior, in-place replacement, VALID_CODES sync
-
-### v2.6.3
-- **Fixed**: menu no longer appears for dates, IPv4 addresses, decimals, and thousands-separated numbers; a real phone after a date/IP/`/` is still detected
-- **Fixed**: national trunk prefixes (`01` MX, `06` HU, `8` LT, `0` DE/AT/IE/FI) and RU `77`/`78` forms
-- **Fixed**: manual fallback (library unavailable) now accepts short valid numbers, keeps numbers starting with the country code, and formats multiple numbers split by `/`
-- **Fixed**: 7-digit numbers open the menu again
-- **Fixed**: unknown country values are normalized consistently for the menu, formatter, and GOST guard
-- **Security**: extension-keyword ReDoS on long whitespace runs; 4 KB input guard retained
-- **Tooling**: npm version validated in CI, release zip verified byte-for-byte against its sources, exact two-file contents, read-only build job
-- **Tests**: 498 checks × 3 seeds + 25 manual-fallback checks, plus date/IP/trunk/ReDoS regressions
-
-### v2.6.2
-- **Fixed**: bundled libphonenumber now actually loads in PopClip (IIFE + `module.exports`); before, the CJS bundle failed on frozen exports and silently used manual formatting
-- **Fixed**: 5–6 digit extensions are no longer dropped (e.g. FR `poste 12345`, DE `ext. 123456`)
-- **Changed**: GOST checkbox removed — GOST now shows automatically for RU, since PopClip cannot hide options conditionally
-- **New**: settings and submenu labels for all 16 languages
-- **Tooling**: tests run on every push/PR; lib updates rebuild the zip; esbuild pinned; the updater runs in a read-only CI job; manual-fallback test added
-
-### v2.6.1
-- **Library**: bundled libphonenumber-js 1.13.13 → 1.13.15
-- **Tooling**: `make typecheck` / `make harness`, release gates on typecheck + tests, zip excludes `*.d.ts`
-- **CI**: lib freshness workflow is idempotent, actions v7
-
-### v2.6.0
-- **New**: 📋 GOST submenu item (GOST R 7.0.97-2016), visible only for RU country
-- **New**: runtime output guard — strict E.164 / RFC 3966 check before paste
-- **New**: repo test suite (`make test`, `test/phonefmt.test.js`) — 3717 randomized checks, 100%
-- Fixed: space-separated extensions dropped (`Durchwahl 123`, `poste 123`, quoted `ext 123`)
-- Fixed: bare `;123` / `#123` separators (incl. after closing quote)
-- Fixed: `00` IDD prefix → `+` conversion with library validation
-- Fixed: dead `#resolveCountry` (country resolution now works, incl. RU/KZ split)
-- Fixed: `+60` mapped to MY (was ID); label typos (`lista` → `lisa`)
-
-<details>
-<summary><strong>Previous versions</strong></summary>
-
-### v2.5.1
-- **Critical fix**: Numbers with `isValid()=false` now rejected (not fallback)
-- Fixed handling of multiple plus signs (`++`, `+++`, etc.)
-- Added Option (⌥) modifier for format inversion
-- Improved country detection from country code
-- 41/41 tests passing
-
-### v2.4.0
-- Added Option (⌥) modifier support
-- Improved document formatting
-
-### v2.3.0
-- Added modifier key infrastructure
-- Fixed extension parsing
-
-</details>
+---
 
 ## License
 
